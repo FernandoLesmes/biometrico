@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Asistencia</title>
+    
+    {% load static %}  <!-- 🔹 IMPORTANTE: Cargar archivos estáticos -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+    <!-- Encabezado con el Logo -->
+    <header>
+        <img src="{% static 'img/logo.png' %}" alt="Logo" class="header-img">
+    </header>
+
+    <h1>Cofiguracion</h1>
+    <a href="{% url 'home' %}">Volver al Inicio</a>
+
+</body>
+</html>
+

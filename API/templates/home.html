@@ -1,11 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Página de inicio</title>
+    <!-- Cargar la etiqueta de archivos estáticos -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-    <h1>home</h1>
+    <!-- Imagen de encabezado -->
+    <header>
+        <img src="{% static 'img/logo.png' %}" alt="Logo" class="header-img">
+    </header>
+
+    <div class="container">
+        <h2>Bienvenido, {{ user.username }}: Sistema de gestion de turnos y control de ingresos y salidas</h2>
+
+        <!-- Sección con 6 cuadros -->
+        <div class="grid-container">
+            <a href="{% url 'turnos' %}" class="box">Turnos</a>
+            <a href="{% url 'empleados' %}" class="box">Empleados</a>
+            <a href="{% url 'asistencia' %}" class="box">Asistencia</a>
+            <a href="{% url 'reportes' %}" class="box">Reportes</a>
+            <a href="{% url 'configuracion' %}" class="box">Configuraciones</a>
+            
+        </div>
+
+    </div>
+
+
 </body>
+
+
+<form method="post" action="{% url 'logout' %}">
+    {% csrf_token %}
+    <button type="submit">Cerrar sesión</button>
+</form>
 </html>
+

@@ -44,7 +44,7 @@ ROOT_URLCONF = 'mysite.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -71,7 +71,7 @@ DATABASES = {
         'USER': 'root',
         'PASSWORD': 'Aceros123*',
         'HOST': '127.0.0.1',
-        'PORT': '3307',
+        'PORT': '3308',
     }
 }
 
@@ -110,13 +110,18 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / "static"]
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_REDIRECT_URL = 'task_list/'
+LOGIN_REDIRECT_URL = '/'  # Redirige al home después de iniciar sesión
+LOGOUT_REDIRECT_URL = '/login/'  # Redirige a la página de login después de cerrar sesión
+LOGIN_URL = '/login/'  # Redirige al login si el usuario no está autenticado
+
 
 pymysql.install_as_MySQLdb()

@@ -1,0 +1,111 @@
+/* Reset global styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #e1f5fe; /* Fondo azul claro */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+/* Login container */
+.login-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 400px;
+    height: 400px; /* Ajusta la altura para que el cuadro no quede muy grande */
+    background-color: #fff;
+    padding: 40px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    text-align: center;
+    border: 2px solid #3498db; /* Borde azul alrededor */
+    box-sizing: border-box;
+}
+
+/* Heading styling */
+h2 {
+    color: #3498db; /* Azul para el título */
+    margin-bottom: 20px;
+}
+
+/* Input group styles */
+.input-group {
+    margin-bottom: 20px;
+}
+
+input[type="text"],
+input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+    outline: none;
+    border-color: #3498db; /* Azul al hacer focus */
+}
+
+/* Text styles for login prompt */
+.login-prompt {
+    color: #555;
+    font-size: 16px;
+    margin-bottom: 20px; /* Ajusta el margen para que no se pegue al resto del formulario */
+}
+
+/* Remember me checkbox and link */
+.remember-me {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.remember-me a {
+    text-decoration: none;
+    color: #3498db;
+}
+
+.remember-me a:hover {
+    text-decoration: underline;
+}
+
+/* Button styles */
+.btn-submit {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    background-color: #3498db; /* Azul para el botón */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-submit:hover {
+    background-color: #2980b9; /* Efecto hover más oscuro */
+}
+
+/* Error message styles */
+.error-message {
+    color: red;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
