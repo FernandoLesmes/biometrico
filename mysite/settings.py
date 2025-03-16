@@ -67,7 +67,7 @@ DATABASES = {
     'default': {
         
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'biometrico',
+        'NAME': 'db',
         'USER': 'root',
         'PASSWORD': 'Aceros123*',
         'HOST': '127.0.0.1',
