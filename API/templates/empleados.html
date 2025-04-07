@@ -1,21 +1,116 @@
+<!-- empleados.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Empleados</title>
-    
-    {% load static %}  <!-- 🔹 IMPORTANTE: Cargar archivos estáticos -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Empleados</title>
+    {% load static %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
 
-    <!-- Encabezado con el Logo -->
     <header>
-        <img src="{% static 'img/logo.png' %}" alt="Logo" class="header-img">
+        <img src="{% static 'img/logo.png' %}" alt="Logo">
     </header>
 
-    <h1>Empleados</h1>
+    <h1>Gestión de Empleados</h1>
+
+    <form method="POST" action="{% url 'crear_empleado' %}">
+        {% csrf_token %}
+
+        <label for="emp_pin">Cédula:</label>
+        <input type="text" name="emp_pin" required>
+
+        <label for="emp_firstname">Nombre:</label>
+        <input type="text" name="emp_firstname" required>
+
+        <label for="emp_lastname">Apellido:</label>
+        <input type="text" name="emp_lastname" required>
+
+        <label for="emp_job">Cargo:</label>
+        <select name="emp_job" required>
+            <option value="" selected disabled>Seleccione un Cargo</option>
+            {% for cargo in cargos %}
+                <option value="{{ cargo.id }}">{{ cargo.nombre }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="emp_group">Grupo:</label>
+        <select name="emp_group" required>
+            <option value="" selected disabled>Seleccione un Grupo</option>
+            {% for grupo in grupos %}
+                <option value="{{ grupo.id }}">{{ grupo.nombre }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="emp_role">Rol:</label>
+        <select name="emp_role" required>
+            <option value="" selected disabled>Seleccione un Rol</option>
+            {% for rol in roles %}
+                <option value="{{ rol.id }}">{{ rol.nombre }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="emp_cost_center">Centro de Costo:</label>
+        <select name="emp_cost_center" required>
+            <option value="" selected disabled>Seleccione un Centro de Costo</option>
+            {% for centro in centros_costos %}
+                <option value="{{ centro.id }}">{{ centro.nombre }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="emp_email">Correo:</label>
+        <input type="email" name="emp_email" required>
+
+        <label for="emp_active">Activo:</label>
+        <input type="checkbox" name="emp_active">
+
+        <button type="submit">Guardar</button>
+    </form>
+
+    {% if error %}
+        <p style="color: red;">Error: {{ error }}</p>
+    {% endif %}
+
+    <h2>Lista de Empleados</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Cédula</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Cargo</th>
+                <th>Grupo</th>
+                <th>Rol</th>
+                <th>Centro de Costo</th>
+                <th>Correo</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for empleado in empleados %}
+            <tr>
+                <td>{{ empleado.emp_pin }}</td>
+                <td>{{ empleado.emp_firstname }}</td>
+                <td>{{ empleado.emp_lastname }}</td>
+                <td>{{ empleado.emp_job.nombre }}</td>
+                <td>{{ empleado.emp_group.nombre }}</td>
+                <td>{{ empleado.emp_role.nombre }}</td>
+                <td>{{ empleado.emp_cost_center.nombre }}</td>
+                <td>{{ empleado.emp_email }}</td>
+                
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="9">No hay empleados registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
     <a href="{% url 'home' %}">Volver al Inicio</a>
 
 </body>
 </html>
+

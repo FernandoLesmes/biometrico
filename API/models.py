@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class AcGroup(models.Model):
     id = models.AutoField(primary_key=True)
     acgroup_id = models.IntegerField(blank=True, null=True)
@@ -49,31 +50,15 @@ class AcTimezone(models.Model):
     class Meta:
         managed = False
         db_table = 'ac_timezone'
+        
+        
+# empleados
 
-class HrEmployee(models.Model):
-    id = models.AutoField(primary_key=True)
-    emp_pin = models.BigIntegerField(unique=True)
-    emp_ssn = models.CharField(max_length=50, blank=True, null=True)
-    emp_role = models.CharField(max_length=50, blank=True, null=True)
-    emp_firstname = models.CharField(max_length=50, blank=True, null=True)
-    emp_lastname = models.CharField(max_length=50, blank=True, null=True)
-    emp_username = models.CharField(max_length=50, blank=True, null=True)
-    emp_pwd = models.CharField(max_length=100, blank=True, null=True)
-    emp_phone = models.CharField(max_length=20, blank=True, null=True)
-    emp_email = models.EmailField(max_length=255, blank=True, null=True)
-    emp_privilege = models.IntegerField(blank=True, null=True)
-    emp_hiredate = models.DateField(blank=True, null=True)
-    emp_firedate = models.DateField(blank=True, null=True)
-    emp_birthday = models.DateField(blank=True, null=True)
-    emp_active = models.BooleanField(default=True)
-    emp_address = models.CharField(max_length=255, blank=True, null=True)
-    emp_operationmode = models.IntegerField(blank=True, null=True)
-    emp_gender = models.IntegerField(blank=True, null=True)
-    department = models.ForeignKey('HrDepartment', on_delete=models.SET_NULL, null=True)
 
-    class Meta:
-        managed = False
-        db_table = 'hr_employee'
+    
+    
+    
+    
 
 class HrDepartment(models.Model):
     id = models.AutoField(primary_key=True)
@@ -114,3 +99,126 @@ class AttShift(models.Model):
 
 
 
+
+
+
+#roles
+
+class EmpRole(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+
+    class Meta:
+        db_table = 'emp_role'
+        managed = False
+
+    def __str__(self):
+        return self.nombre
+
+
+#roles
+class EmpJob(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+
+    class Meta:
+        db_table = 'emp_job'
+        managed = False
+
+    def __str__(self):
+        return self.nombre
+
+
+#centros de costo
+class EmpCostCenter(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+
+    class Meta:
+        db_table = 'emp_cost_center'
+        managed = False # por aca 
+    def __str__(self):
+        return self.nombre
+
+
+
+
+    #grupos
+class HrGroup(models.Model):
+    nombre = models.CharField(max_length=255, unique=True)
+
+    class Meta:
+        db_table = 'hr_group'  # 🔥 Asegura que se use la tabla correcta en la BD
+        managed = False
+
+    def __str__(self):
+        return self.nombre  # ✅ Corregido
+    
+    
+    
+    
+    #empleados
+    
+class HrEmployee(models.Model):
+    emp_pin = models.BigIntegerField(unique=True, null=False, blank=False)  # Cedula
+    emp_firstname = models.CharField(max_length=100, null=False, blank=False)  # Nombre
+    emp_lastname = models.CharField(max_length=100, null=False, blank=False)  # Apellido
+    emp_job = models.ForeignKey(EmpJob, on_delete=models.CASCADE, null=False, blank=False)  # Cargo
+    #emp_emp_group = models.ForeignKey(HrGroup, on_delete=models.CASCADE, null=False, blank=False, db_column='emp_group')  # Grupo (¡este es el que te da error!)
+    emp_group = models.ForeignKey(HrGroup, on_delete=models.CASCADE, db_column='emp_group')
+    emp_role = models.ForeignKey(EmpRole, on_delete=models.CASCADE, null=False, blank=False)  # Rol
+    emp_cost_center = models.ForeignKey(EmpCostCenter, on_delete=models.CASCADE, null=False, blank=False)  # Centro de Costo
+    emp_email = models.CharField(max_length=150, unique=True, null=False, blank=False)  # Correo
+    emp_photo = models.CharField(max_length=255, null=True, blank=True)  # Foto (opcional)
+    emp_active = models.BooleanField(default=True, null=False, blank=False)  # Activo o Inactivo
+
+    class Meta:
+        db_table = 'hr_employee'   # 🔥 Aquí se lo dices a Django
+        managed = False # 🔒 Importante: no la maneja Django
+        
+    def __str__(self):
+        return f"{self.emp_firstname} {self.emp_lastname}"
+
+
+
+
+
+#qué turno tiene asignado un empleado en una fecha específica
+
+class EmpleadoTurno(models.Model):
+    empleado = models.ForeignKey('HrEmployee', on_delete=models.CASCADE, db_column='empleado_id')
+    turno = models.ForeignKey('AttShift', on_delete=models.CASCADE, db_column='turno_id')
+    fecha = models.DateField()
+    hora_entrada = models.TimeField()
+    hora_salida = models.TimeField()
+    horas_extra = models.DecimalField(max_digits=5, decimal_places=2, default=0)  # ejemplo: 1.50 = 1h 30min
+    aprobado = models.BooleanField(default=False)  # Validación del líder
+
+    class Meta:
+        db_table = 'empleado_turno'
+        unique_together = ('empleado', 'fecha')  # Solo un turno por día por empleado
+        managed = False
+
+    def __str__(self):
+        return f"{self.empleado} - {self.fecha} - Turno: {self.turno}"
+
+
+
+
+
+
+class AttPunch(models.Model):
+    employee = models.ForeignKey('HrEmployee', on_delete=models.CASCADE, db_column='employee_id')
+    punch_time = models.DateTimeField()
+    terminal_id = models.CharField(max_length=50)
+    punch_type = models.CharField(max_length=20)
+
+    class Meta:
+        db_table = 'att_punches'  # Para que la tabla tenga el mismo nombre
+        verbose_name = 'Marcación'
+        verbose_name_plural = 'Marcaciones'
+
+    def __str__(self):
+        return f"{self.employee.emp_firstname} - {self.punch_time}"
+
+    
+    
+    
+    

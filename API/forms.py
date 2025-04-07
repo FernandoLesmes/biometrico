@@ -1,6 +1,6 @@
 from django import forms
 from .models import AttShift
-
+from .models import HrGroup 
 
 
 class ShiftForm(forms.ModelForm):
@@ -32,3 +32,13 @@ class ShiftForm(forms.ModelForm):
             'break_start': forms.TimeInput(attrs={'type': 'time'}),
             'break_end': forms.TimeInput(attrs={'type': 'time'}),
         }
+
+
+
+#grupos 
+
+class HrGroupForm(forms.ModelForm):
+    class Meta:
+         model = HrGroup
+         fields = ["nombre"]  # 🔥 Asegura que aquí también está 'group_name'
+        

@@ -3,18 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <title>Reportes</title>
-    
-    {% load static %}  <!-- 🔹 IMPORTANTE: Cargar archivos estáticos -->
+    {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
 
-    <!-- Encabezado con el Logo -->
     <header>
         <img src="{% static 'img/logo.png' %}" alt="Logo" class="header-img">
     </header>
 
     <h1>Reportes de asistencia</h1>
+
+    <form method="get">
+        <label for="tipo">Tipo de Reporte:</label>
+        <select name="tipo" id="tipo" onchange="this.form.submit()">
+            <option value="basico" {% if tipo == 'basico' %}selected{% endif %}>Asistencia Básica</option>
+            <option value="horas_extras" {% if tipo == 'horas_extras' %}selected{% endif %}>Horas Extras</option>
+        </select>
+    
+        <label>Cédula:</label>
+        <input type="text" name="cedula" value="{{ request.GET.cedula }}">
+    
+        <label>Desde:</label>
+        <input type="date" name="desde" value="{{ request.GET.desde }}">
+    
+        <label>Hasta:</label>
+        <input type="date" name="hasta" value="{{ request.GET.hasta }}">
+    
+        <button type="submit">Filtrar</button>
+    </form>
+    
+
+    {% if tipo == 'basico' %}
+        <h2>Asistencia Básica</h2>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Cédula</th>
+                    <th>Apellido</th>
+                    <th>Nombre</th>
+                    <th>Grupo</th>
+                    <th>Fecha</th>
+                    <th>Turno</th>
+                    <th>Entró</th>
+                    <th>Salió</th>
+                    <th>Entró</th>
+                    <th>Salió</th>
+                    <th>Entró</th>
+                    <th>Salió</th>
+                    <th>Entró</th>
+                    <th>Salió</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in datos %}
+                <tr>
+                    <td>{{ r.cedula }}</td>
+                    <td>{{ r.apellidos }}</td>
+                    <td>{{ r.nombre }}</td>
+                    <td>{{ r.grupo }}</td>
+                    <td>{{ r.fecha }}</td>
+                    <td>{{ r.turno }}</td>
+                    {% for marca in r.entradas_salidas %}
+                        <td>{{ marca|time:"H:i" }}</td>
+                    {% endfor %}
+                    {% for i in "12345678"|slice:8|length|add:'0'|default:0 %}
+                        <td></td>  {# completa si hay menos de 8 marcas #}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    {% else %}
+        <h2>Reporte de Horas Extras</h2>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Cédula</th>
+                    <th>Apellido</th>
+                    <th>Nombre</th>
+                    <th>Grupo</th>
+                    <th>Fecha</th>
+                    <th>Turno</th>
+                    <th>Entró</th>
+                    <th>Salió</th>
+                    <th>Horas Extras Diurnas</th>
+                    <th>Horas Extras Nocturnas</th>
+                    <th>Horas Festivas Diurnas</th>
+                    <th>Horas Festivas Nocturnas</th>
+                    <th>Recargo Nocturno</th>
+                    <th>Recargo N Festivo</th>
+                    <th>Aprobado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in datos %}
+                <tr>
+                    <td>{{ r.cedula }}</td>
+                    <td>{{ r.apellidos }}</td>
+                    <td>{{ r.nombre }}</td>
+                    <td>{{ r.grupo }}</td>
+                    <td>{{ r.fecha }}</td>
+                    <td>{{ r.turno }}</td>
+                    <td>{{ r.entrada }}</td>
+                    <td>{{ r.salida }}</td>
+                    <td>{{ r.horas_extras_diurnas }}</td>
+                    <td>{{ r.horas_extras_nocturnas }}</td>
+                    <td>{{ r.horas_extras_festivas_diurnas }}</td>
+                    <td>{{ r.horas_extras_festivas_nocturnas }}</td>
+                    <td>{{ r.recargo_nocturno }}</td>
+                    <td>{{ r.recargo_nocturno_festivo }}</td>
+                    <td>{{ r.aprobado|yesno:"✅,❌" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
     <a href="{% url 'home' %}" class="btn">Volver al Inicio</a>
 
 </body>
