@@ -6,6 +6,8 @@ from .views import lista_grupos
 from .views import obtener_grupos
 from .views import lista_empleados, crear_empleado
 from .views import reportes_view
+
+
 urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
@@ -30,7 +32,7 @@ urlpatterns = [
     
     #empleados
     path('empleados/', lista_empleados, name='empleados'),
-    path('empleados/', lista_empleados, name="lista_empleados"),
+    #path('empleados/', lista_empleados, name="lista_empleados"),
     path('empleados/crear/', crear_empleado, name="crear_empleado"),
     
     # empleado turno, definimos reportes para horas extras
@@ -41,6 +43,10 @@ urlpatterns = [
     
     #reportes de horas extras
     path('reportes/horas_extras', views.reporte_horas_extras, name='reporte_horas_extras'),
+
+   
+
+    
 
     
 ]

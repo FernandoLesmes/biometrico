@@ -21,6 +21,14 @@ from datetime import datetime, timedelta
 
 
 
+
+
+from API.utils.turnos import detectar_turno
+
+
+from API.utils.reportes import procesar_marcaciones
+
+
 def turnos_view(request):
     return render(request, 'turnos.html')
 
@@ -258,6 +266,7 @@ def crear_empleado(request):
 
 
 
+
 #empleado turno
 def reporte_turnos(request):
     asignaciones = EmpleadoTurno.objects.select_related('empleado', 'turno').all()
@@ -266,23 +275,6 @@ def reporte_turnos(request):
         'asignaciones': asignaciones
     })
     
-    
-    
-    
-    
-    
-    #reporte basico, solo vera entrasa y salida y dertminara en cual turno esta
-   #ef detectar_turno(entrada, salida):
-    #or turno in TURNOS.values():
-       #inicio = turno["hora_entrada_min"].hour
-       #fin = turno["hora_salida"].hour
-       #if inicio < fin:
-           #if inicio <= entrada.hour < fin:
-               #return turno
-       #else:
-           #if entrada.hour >= inicio or entrada.hour < fin:
-                #eturn turno
-   #return None
 
 # ✅ Reporte de asistencia básica
 def generar_reporte_basico(filtros):
@@ -325,6 +317,16 @@ def generar_reporte_basico(filtros):
             })
 
     return datos
+
+
+
+
+
+
+
+
+
+
 
 
 # ✅ Reporte de horas extras
@@ -383,17 +385,27 @@ def reporte_horas_extras(filtros):
 
 # ✅ Vista unificada para mostrar reportes
 def reportes_view(request):
-    tipo = request.GET.get('tipo', 'basico')
+    tipo = request.GET.get("tipo", "basico")
+    cedula = request.GET.get("cedula")
+    desde = request.GET.get("desde")
+    hasta = request.GET.get("hasta")
+
+    # Ejecutar procesamiento si hay fechas definidas
+    if desde and hasta:
+        fecha_inicio = datetime.strptime(desde, "%Y-%m-%d").date()
+        fecha_fin = datetime.strptime(hasta, "%Y-%m-%d").date()
+        procesar_marcaciones(fecha_inicio, fecha_fin)
+
     filtros = {
-        'cedula': request.GET.get('cedula'),
-        'desde': request.GET.get('desde'),
-        'hasta': request.GET.get('hasta')
+        'cedula': cedula,
+        'desde': desde,
+        'hasta': hasta
     }
 
     if tipo == 'basico':
         datos = generar_reporte_basico(filtros)
     elif tipo == 'horas_extras':
-        datos = reporte_horas_extras(filtros)  # ← CORREGIDO AQUÍ
+        datos = reporte_horas_extras(filtros)
     else:
         datos = []
 
@@ -401,5 +413,3 @@ def reportes_view(request):
         'datos': datos,
         'tipo': tipo
     })
-
-

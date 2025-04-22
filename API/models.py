@@ -157,6 +157,7 @@ class HrGroup(models.Model):
     #empleados
     
 class HrEmployee(models.Model):
+    id = models.IntegerField(primary_key=True)
     emp_pin = models.BigIntegerField(unique=True, null=False, blank=False)  # Cedula
     emp_firstname = models.CharField(max_length=100, null=False, blank=False)  # Nombre
     emp_lastname = models.CharField(max_length=100, null=False, blank=False)  # Apellido
@@ -188,13 +189,28 @@ class EmpleadoTurno(models.Model):
     fecha = models.DateField()
     hora_entrada = models.TimeField()
     hora_salida = models.TimeField()
-    horas_extra = models.DecimalField(max_digits=5, decimal_places=2, default=0)  # ejemplo: 1.50 = 1h 30min
-    aprobado = models.BooleanField(default=False)  # Validación del líder
+
+    # Horas extras desglosadas
+    horas_extras_diurnas = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    horas_extras_nocturnas = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    horas_extras_festivas_diurnas = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    horas_extras_festivas_nocturnas = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+
+    # Recargos
+    recargo_nocturno = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    recargo_nocturno_festivo = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+
+    # Aprobación y comentarios del líder/supervisor
+    aprobado_por_lider = models.BooleanField(default=False)
+    comentario = models.TextField(blank=True, null=True)
+
+    # Control automático de registros
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = 'empleado_turno'
-        unique_together = ('empleado', 'fecha')  # Solo un turno por día por empleado
-        managed = False
+        unique_together = ('empleado', 'fecha')
+        managed = True  # ✅ Esto es importante para que Django la cree y la administre
 
     def __str__(self):
         return f"{self.empleado} - {self.fecha} - Turno: {self.turno}"
@@ -204,6 +220,7 @@ class EmpleadoTurno(models.Model):
 
 
 
+# esta es la tabla de marcaciones
 class AttPunch(models.Model):
     employee = models.ForeignKey('HrEmployee', on_delete=models.CASCADE, db_column='employee_id')
     punch_time = models.DateTimeField()
@@ -214,6 +231,7 @@ class AttPunch(models.Model):
         db_table = 'att_punches'  # Para que la tabla tenga el mismo nombre
         verbose_name = 'Marcación'
         verbose_name_plural = 'Marcaciones'
+        managed = False
 
     def __str__(self):
         return f"{self.employee.emp_firstname} - {self.punch_time}"

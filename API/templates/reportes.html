@@ -64,15 +64,20 @@
                     <td>{{ r.grupo }}</td>
                     <td>{{ r.fecha }}</td>
                     <td>{{ r.turno }}</td>
+            
+                    {# Mostrar las marcas #}
                     {% for marca in r.entradas_salidas %}
                         <td>{{ marca|time:"H:i" }}</td>
                     {% endfor %}
-                    {% for i in "12345678"|slice:8|length|add:'0'|default:0 %}
-                        <td></td>  {# completa si hay menos de 8 marcas #}
+            
+                    {# Rellenar con celdas vacías si hay menos de 8 marcas #}
+                    {% for i in "12345678"|slice:8|slice:":{{ 8|add:-r.entradas_salidas|length }}" %}
+                        <td></td>
                     {% endfor %}
                 </tr>
                 {% endfor %}
             </tbody>
+            
         </table>
 
     {% else %}
