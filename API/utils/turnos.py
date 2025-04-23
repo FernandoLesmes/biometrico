@@ -238,7 +238,7 @@ def detectar_turno(entrada, salida, grupo_nombre=None):
         'producción cali 5-cali'
     ]
     if grupo_nombre and grupo_nombre.lower() not in GRUPOS_TURNOS_PERMITIDOS:
-        print(f"🚫 Grupo no autorizado para turnos: {grupo_nombre}")
+        #print(f"🚫 Grupo no autorizado para turnos: {grupo_nombre}")
         return None
 
     for turno_id, turno in TURNOS.items():
@@ -249,19 +249,19 @@ def detectar_turno(entrada, salida, grupo_nombre=None):
         # Entrada anticipada válida
         if turno.get("hora_extra_inicio") and turno.get("hora_extra_fin"):
             if turno["hora_extra_inicio"] <= entrada_time <= entrada_max:
-                print(f"✅ Detectado turno (anticipado): {turno['nombre']}")
+                #print(f"✅ Detectado turno (anticipado): {turno['nombre']}")
                 return turno
 
         # Turnos normales o cruzados
         if entrada_min > salida_turno:
             if entrada_time >= entrada_min or entrada_time <= salida_turno:
-                print(f"✅ Detectado turno nocturno: {turno['nombre']}")
+                #print(f"✅ Detectado turno nocturno: {turno['nombre']}")
                 return turno
         else:
             if entrada_min <= entrada_time <= entrada_max:
-                print(f"✅ Detectado turno: {turno['nombre']}")
+               # print(f"✅ Detectado turno: {turno['nombre']}")
                 return turno
 
-    print(f"❌ No se detectó turno para entrada: {entrada_time}")
+    #print(f"❌ No se detectó turno para entrada: {entrada_time}")
     return None
 

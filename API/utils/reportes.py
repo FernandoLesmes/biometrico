@@ -1,12 +1,140 @@
-
 from collections import defaultdict
 from datetime import datetime, timedelta, time
 from django.db import transaction
-from API.models import AttPunch, HrEmployee, EmpleadoTurno, AttShift
+from django.shortcuts import render
+
+from API.models import HrEmployee, HrGroup, AttPunch, EmpleadoTurno, AttShift
 from API.utils.turnos import TURNOS, detectar_turno
 from API.utils.festivos import es_festivo
 
-# Grupos permitidos para turnos especiales
+
+# ========================
+# ✅ Función para parsear fechas
+# ========================
+def parse_fecha(fecha_str):
+    try:
+        return datetime.strptime(fecha_str.strip().rstrip('-'), "%Y-%m-%d").date()
+    except Exception:
+        return None
+
+
+# ========================
+# ✅ Reporte de asistencia básica
+# ========================
+def generar_reporte_basico(filtros):
+    datos = []
+    empleados = HrEmployee.objects.select_related('emp_group')
+
+    if filtros.get('cedula'):
+        empleados = empleados.filter(emp_pin__icontains=filtros['cedula'])
+
+    for emp in empleados:
+        registros = AttPunch.objects.filter(employee_id=emp.id).order_by('punch_time')
+
+        if filtros.get('desde'):
+            registros = registros.filter(punch_time__date__gte=filtros['desde'])
+        if filtros.get('hasta'):
+            registros = registros.filter(punch_time__date__lte=filtros['hasta'])
+
+        dias = {}
+        for r in registros:
+            fecha = r.punch_time.date()
+            dias.setdefault(fecha, []).append(r.punch_time)
+
+        for fecha, marcas in dias.items():
+            if len(marcas) < 2:
+                continue
+
+            entrada = marcas[0]
+            salida = marcas[-1]
+            turno = detectar_turno(entrada, salida)
+
+            datos.append({
+                'cedula': emp.emp_pin,
+                'nombre': emp.emp_firstname,
+                'apellidos': emp.emp_lastname,
+                'grupo': emp.emp_group.nombre if emp.emp_group else '',
+                'fecha': fecha,
+                'turno': turno['nombre'] if turno else 'Desconocido',
+                'entradas_salidas': marcas
+            })
+
+    return datos
+
+
+# ========================
+# ✅ Reporte de horas extras
+# ========================
+def reporte_horas_extras(filtros):
+    datos = []
+    registros = EmpleadoTurno.objects.select_related('empleado', 'turno')
+
+    if filtros.get('cedula'):
+        registros = registros.filter(empleado__emp_pin__icontains=filtros['cedula'])
+    if filtros.get('desde'):
+        registros = registros.filter(fecha__gte=filtros['desde'])
+    if filtros.get('hasta'):
+        registros = registros.filter(fecha__lte=filtros['hasta'])
+
+    for r in registros:
+        datos.append({
+            'cedula': r.empleado.emp_pin,
+            'nombre': r.empleado.emp_firstname,
+            'apellidos': r.empleado.emp_lastname,
+            'grupo': r.empleado.emp_group.nombre if r.empleado.emp_group else '',
+            'fecha': r.fecha,
+            'turno': r.turno.shift_name,
+            'entrada': r.hora_entrada,
+            'salida': r.hora_salida,
+            'horas_extras_diurnas': r.horas_extras_diurnas,
+            'horas_extras_nocturnas': r.horas_extras_nocturnas,
+            'horas_extras_festivas_diurnas': r.horas_extras_festivas_diurnas,
+            'horas_extras_festivas_nocturnas': r.horas_extras_festivas_nocturnas,
+            'recargo_nocturno': r.recargo_nocturno,
+            'recargo_nocturno_festivo': r.recargo_nocturno_festivo,
+            'aprobado': r.aprobado_por_lider
+        })
+
+    return datos
+
+
+# ========================
+# ✅ Vista de reportes (unificada)
+# ========================
+def reportes_view(request):
+    tipo = request.GET.get("tipo", "basico")
+    cedula = request.GET.get("cedula")
+    desde = request.GET.get("desde")
+    hasta = request.GET.get("hasta")
+
+    fecha_inicio = parse_fecha(desde)
+    fecha_fin = parse_fecha(hasta)
+
+    if fecha_inicio and fecha_fin:
+        procesar_marcaciones(fecha_inicio, fecha_fin)
+
+    filtros = {
+        'cedula': cedula,
+        'desde': fecha_inicio,
+        'hasta': fecha_fin,
+    }
+
+    if tipo == 'basico':
+        datos = generar_reporte_basico(filtros)
+    elif tipo == 'horas_extras':
+        datos = reporte_horas_extras(filtros)
+    else:
+        datos = []
+
+    return render(request, 'reportes.html', {
+        'datos': datos,
+        'tipo': tipo
+    })
+
+
+# ========================
+# ✅ Turnos especiales (Turno 3)
+# ========================
 GRUPOS_TURNO_1 = [
     'producción bogotá 2-bogotá avenida 68',
     'producción bucaramanga 7-bucaramanga',
@@ -14,32 +142,28 @@ GRUPOS_TURNO_1 = [
 ]
 GRUPOS_TURNO_2 = GRUPOS_TURNO_1
 
-# 🔁 Lógica especializada para Turno 3 (nocturno cruzado de día)
+
 def agrupar_marcaciones_3(marcaciones):
     bloques = []
     i = 0
     while i < len(marcaciones):
-        entrada = marcaciones[i]
-        print(f"🔍 Analizando entrada: {entrada}")
-        
-        for j in range(i+1, len(marcaciones)):
-            salida = marcaciones[j]
+        entrada = marcaciones[i].punch_time
+        for j in range(i + 1, len(marcaciones)):
+            salida = marcaciones[j].punch_time
             diferencia = salida - entrada
-            print(f"    ↪️ Posible salida: {salida} | Diferencia: {diferencia}")
-
             if timedelta(hours=5) <= diferencia <= timedelta(hours=10):
                 if entrada.time() >= time(20, 30) and salida.time() <= time(8, 30):
-                    print(f"✅ Turno 3 detectado: Entrada {entrada} → Salida {salida}")
                     bloques.append((entrada, salida))
                     i = j + 1
                     break
         else:
             i += 1
-
-    print(f"🔧 Total bloques detectados turno 3: {len(bloques)}")
     return bloques
 
 
+# ========================
+# ✅ Procesamiento general de marcaciones
+# ========================
 @transaction.atomic
 def procesar_marcaciones(fecha_inicio, fecha_fin):
     empleados = HrEmployee.objects.all()
@@ -49,7 +173,6 @@ def procesar_marcaciones(fecha_inicio, fecha_fin):
         if not grupo:
             continue
 
-        # 🔍 Ampliamos el rango 1 día antes y después por Turno 3 cruzado
         marcaciones = AttPunch.objects.filter(
             employee=empleado,
             punch_time__range=[fecha_inicio - timedelta(days=1), fecha_fin + timedelta(days=1)]
@@ -61,10 +184,8 @@ def procesar_marcaciones(fecha_inicio, fecha_fin):
         marcaciones_list = list(marcaciones)
         fechas_turno_3 = set()
 
-        # ==============================
-        # 🕓 Turno 3 - Procesamiento nocturno cruzado
-        # ==============================
         bloques_turno_3 = agrupar_marcaciones_3(marcaciones_list)
+
         for entrada, salida in bloques_turno_3:
             fecha = entrada.date()
             festivo = es_festivo(fecha)
@@ -72,7 +193,6 @@ def procesar_marcaciones(fecha_inicio, fecha_fin):
 
             if turno and turno["nombre"] == "Turno 3":
                 fechas_turno_3.add(fecha)
-                print(f"🌙 Turno 3 detectado: Entrada {entrada}, Salida {salida}")
 
                 horas_base = turno["horas_turno"]
                 horas_trabajadas = (salida - entrada).total_seconds() / 3600
@@ -85,7 +205,7 @@ def procesar_marcaciones(fecha_inicio, fecha_fin):
                     empleado=empleado,
                     fecha=fecha,
                     defaults={
-                        "turno": AttShift.objects.get(nombre="Turno 3"),
+                        "turno": AttShift.objects.get(shift_name="Turno 3"),
                         "hora_entrada": entrada,
                         "hora_salida": salida,
                         "festivo": festivo,
@@ -99,9 +219,6 @@ def procesar_marcaciones(fecha_inicio, fecha_fin):
                     }
                 )
 
-        # ==============================
-        # 🕘 Turno 1 y Turno 2 - Procesamiento normal por día
-        # ==============================
         dias = defaultdict(list)
         for m in marcaciones_list:
             f = m.punch_time.date()
@@ -118,26 +235,20 @@ def procesar_marcaciones(fecha_inicio, fecha_fin):
 
             turno = detectar_turno(entrada.time(), salida.time(), grupo)
             if not turno:
-                print(f"❌ No se detectó turno para entrada: {entrada.time()} - salida: {salida.time()}")
                 continue
 
             nombre_turno = turno["nombre"]
-            print(f"✅ Detectado turno: {nombre_turno}")
-
             horas_base = turno["horas_turno"]
-            descanso = timedelta(minutes=30) if turno.get("descuento_almuerzo_si_hay_extra") and salida > turno["hora_salida"] else timedelta()
+            descanso = timedelta(minutes=30) if turno.get("descuento_almuerzo_si_hay_extra") and salida.time() > turno["hora_salida"] else timedelta()
             horas_trabajadas = (datetime.combine(fecha, salida.time()) - datetime.combine(fecha, entrada.time()) - descanso).total_seconds() / 3600
             horas_extra_total = max(0, horas_trabajadas - horas_base)
 
-            if nombre_turno == "Turno 1":
-                if grupo not in GRUPOS_TURNO_1:
-                    continue
-
+            if nombre_turno == "Turno 1" and grupo in GRUPOS_TURNO_1:
                 EmpleadoTurno.objects.update_or_create(
                     empleado=empleado,
                     fecha=fecha,
                     defaults={
-                        "turno": AttShift.objects.get(nombre="Turno 1"),
+                        "turno": AttShift.objects.get(shift_name="Turno 1"),
                         "hora_entrada": entrada,
                         "hora_salida": salida,
                         "festivo": festivo,
@@ -151,10 +262,7 @@ def procesar_marcaciones(fecha_inicio, fecha_fin):
                     }
                 )
 
-            elif nombre_turno == "Turno 2":
-                if grupo not in GRUPOS_TURNO_2:
-                    continue
-
+            elif nombre_turno == "Turno 2" and grupo in GRUPOS_TURNO_2:
                 horas_extras_diurnas = 0
                 if entrada.time() < turno["hora_entrada_min"]:
                     tiempo_extra_antes = (datetime.combine(fecha, turno["hora_entrada_min"]) - datetime.combine(fecha, entrada.time())).total_seconds() / 3600
@@ -167,7 +275,7 @@ def procesar_marcaciones(fecha_inicio, fecha_fin):
                     empleado=empleado,
                     fecha=fecha,
                     defaults={
-                        "turno": AttShift.objects.get(nombre="Turno 2"),
+                        "turno": AttShift.objects.get(shift_name="Turno 2"),
                         "hora_entrada": entrada,
                         "hora_salida": salida,
                         "festivo": festivo,

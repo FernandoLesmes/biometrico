@@ -189,7 +189,7 @@ class EmpleadoTurno(models.Model):
     fecha = models.DateField()
     hora_entrada = models.TimeField()
     hora_salida = models.TimeField()
-
+    festivo = models.BooleanField(default=False)  
     # Horas extras desglosadas
     horas_extras_diurnas = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     horas_extras_nocturnas = models.DecimalField(max_digits=5, decimal_places=2, default=0)
