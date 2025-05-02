@@ -22,8 +22,7 @@ DISPOSITIVOS = [
 ]
 
 # ✅ Fechas fijas para pruebas del 7 al 12 de abril
-FECHA_INICIO = make_aware(datetime(2025, 4, 6, 0, 0, 0))
-FECHA_FIN = make_aware(datetime(2025, 4, 15, 23, 59, 59))
+FECHA_MINIMA = make_aware(datetime(2025, 4, 20, 21, 59, 0))
 
 def sincronizar_dispositivo(ip, nombre_terminal):
     print(f"📡 Conectando a {nombre_terminal} ({ip})...")
@@ -39,7 +38,7 @@ def sincronizar_dispositivo(ip, nombre_terminal):
 
         for r in registros:
             marca = make_aware(r.timestamp)
-            if FECHA_INICIO <= marca <= FECHA_FIN:
+            if marca >= FECHA_MINIMA:
                 emp_pin = str(r.user_id).strip()
                 punch_type = str(r.status)
 
@@ -71,10 +70,7 @@ def sincronizar_dispositivo(ip, nombre_terminal):
                 pass
             print(f"🔌 {nombre_terminal} desconectado.\n")
 
-# 🔁 Ejecutar
+# Ejecutar
 if __name__ == "__main__":
     for d in DISPOSITIVOS:
         sincronizar_dispositivo(d['ip'], d['nombre'])
-
-
-

@@ -6,6 +6,7 @@ from .views import lista_grupos
 from .views import obtener_grupos
 from .views import lista_empleados, crear_empleado
 from .views import reportes_view
+from API.views import ejecutar_procesamiento
 
 
 urlpatterns = [
@@ -39,10 +40,11 @@ urlpatterns = [
     path('reportes/turnos/', views.reporte_turnos, name='reporte_turnos'),
 
     #solo reportes basicos 
-    path('reportes', views.reportes_view, name='reportes'),
+    path('reportes', views.reportes_view, name='reportes_view'),
     
     #reportes de horas extras
     path('reportes/horas_extras', views.reporte_horas_extras, name='reporte_horas_extras'),
+    path('procesar-marcaciones/', ejecutar_procesamiento, name='procesar_marcaciones'),
 
    
 

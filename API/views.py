@@ -18,6 +18,11 @@ from API.utils.reportes import (
     procesar_marcaciones, generar_reporte_basico, reporte_horas_extras
 )
 
+from API.utils.reportes import procesar_marcaciones
+from datetime import datetime
+from django.utils.timezone import make_aware
+from django.shortcuts import redirect
+
 # ================== VISTAS GENERALES ==================
 def home(request):
     return render(request, 'home.html')
@@ -166,3 +171,14 @@ def reportes_view(request):
 
     datos = generar_reporte_basico(filtros) if tipo == 'basico' else reporte_horas_extras(filtros)
     return render(request, 'reportes.html', {'datos': datos, 'tipo': tipo})
+
+
+def ejecutar_procesamiento(request):
+    # Definimos el rango de fechas (mismo que el de tu proyecto)
+    FECHA_INICIO = make_aware(datetime(2025, 4, 6, 0, 0, 0))
+    FECHA_FIN = make_aware(datetime(2025, 4, 25, 23, 59, 59))
+
+    procesar_marcaciones(FECHA_INICIO, FECHA_FIN)
+
+    # Después de procesar, te devuelve al reporte
+    return redirect('reportes_view')  # asegúrate que el nombre coincida con el nombre de la vista del reporte

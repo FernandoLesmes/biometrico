@@ -127,6 +127,12 @@
     {% endif %}
 
     <a href="{% url 'home' %}" class="btn">Volver al Inicio</a>
+    <form method="get" action="{% url 'procesar_marcaciones' %}">
+        <button type="submit" class="btn btn-primary">
+            🔄 Procesar Marcaciones
+        </button>
+    </form>
+    
 
 </body>
 </html>

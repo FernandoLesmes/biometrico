@@ -141,15 +141,24 @@ TURNOS = {
     4: {
         "nombre": "Turno 4",
         "hora_entrada_min": time(13, 0),
-        "hora_entrada_max": time(13, 15),
+        "hora_entrada_max": time(13, 10),
         "hora_salida": time(21, 0),
         "horas_turno": 8,
-        "autoriza_extra": True,
-        "extras_posibles": {
-            "diurnas": True, "nocturnas": False, "festivas_diurnas": True,
-            "festivas_nocturnas": False, "recargo_nocturno": False, "recargo_nocturno_festivo": False
-        }
+        "sabados_horas_faltantes": 6,
+        "resta_hora_almuerzo": False,
+        "horas_totales_semanales": 46,
+
+        # Turno 4 solo hace jornada normal
+        "permite_horas_extra": False,  # No hace extras diarias
+
+    # Solo se consideran horas extra festivas diurnas si ocurre en festivo
+        "tarifa_extra_festiva_diurna": 2,
+
+    # No hay recargos
+        "recargo_nocturno": 0,
+        "recargo_nocturno_festivo": 0,
     },
+
     5: {
         "nombre": "Turno 5",
         "hora_entrada_min": time(7, 0),

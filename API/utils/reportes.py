@@ -7,6 +7,9 @@ from API.models import HrEmployee, HrGroup, AttPunch, EmpleadoTurno, AttShift
 from API.utils.turnos import TURNOS, detectar_turno
 from API.utils.festivos import es_festivo
 
+#from turnos import detectar_turno, agrupar_marcaciones_3, GRUPOS_TURNO_1, GRUPOS_TURNO_2
+
+
 
 # ========================
 # ✅ Función para parsear fechas
@@ -141,6 +144,7 @@ GRUPOS_TURNO_1 = [
     'producción cali 5-cali'
 ]
 GRUPOS_TURNO_2 = GRUPOS_TURNO_1
+GRUPOS_TURNO_4 = GRUPOS_TURNO_1
 
 
 def agrupar_marcaciones_3(marcaciones):
@@ -187,7 +191,7 @@ def procesar_marcaciones(fecha_inicio, fecha_fin):
         bloques_turno_3 = agrupar_marcaciones_3(marcaciones_list)
 
         for entrada, salida in bloques_turno_3:
-            fecha = entrada.date()
+            fecha = salida.date()  # Turno 3 cruza de día, la fecha debe ser la de salida
             festivo = es_festivo(fecha)
             turno = detectar_turno(entrada.time(), salida.time(), grupo)
 
@@ -197,6 +201,10 @@ def procesar_marcaciones(fecha_inicio, fecha_fin):
                 horas_base = turno["horas_turno"]
                 horas_trabajadas = (salida - entrada).total_seconds() / 3600
                 horas_extra = max(0, horas_trabajadas - horas_base)
+
+                horas_extra_diurna = 0
+                if entrada.time() < time(18, 0):
+                    horas_extra_diurna = (datetime.combine(fecha, time(22, 0)) - datetime.combine(fecha - timedelta(days=1), entrada.time())).total_seconds() / 3600
 
                 recargo = horas_base * turno["rango_recargo_nocturno"]["tasa"]
                 recargo_festivo = horas_base * turno["rango_recargo_nocturno_festivo"]["tasa"]
@@ -209,9 +217,9 @@ def procesar_marcaciones(fecha_inicio, fecha_fin):
                         "hora_entrada": entrada,
                         "hora_salida": salida,
                         "festivo": festivo,
-                        "horas_extras_diurnas": 0,
+                        "horas_extras_diurnas": horas_extra_diurna if not festivo else 0,
+                        "horas_extras_festivas_diurnas": horas_extra_diurna if festivo else 0,
                         "horas_extras_nocturnas": horas_extra if not festivo else 0,
-                        "horas_extras_festivas_diurnas": 0,
                         "horas_extras_festivas_nocturnas": horas_extra if festivo else 0,
                         "recargo_nocturno": recargo if not festivo else 0,
                         "recargo_nocturno_festivo": recargo_festivo if festivo else 0,
