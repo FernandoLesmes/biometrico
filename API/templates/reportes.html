@@ -71,9 +71,9 @@
                     {% endfor %}
             
                     {# Rellenar con celdas vacías si hay menos de 8 marcas #}
-                    {% for i in "12345678"|slice:8|slice:":{{ 8|add:-r.entradas_salidas|length }}" %}
+                   #{% for i in "12345678"|slice:8|slice:":{{ 8|add:-r.entradas_salidas|length }}" %}
                         <td></td>
-                    {% endfor %}
+                    {% endfor %} 
                 </tr>
                 {% endfor %}
             </tbody>
