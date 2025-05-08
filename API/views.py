@@ -182,3 +182,4 @@ def ejecutar_procesamiento(request):
 
     # Después de procesar, te devuelve al reporte
     return redirect('reportes_view')  # asegúrate que el nombre coincida con el nombre de la vista del reporte
+

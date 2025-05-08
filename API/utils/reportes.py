@@ -30,25 +30,38 @@ from API.models import EmpleadoTurno  # Asegúrate de importarlo
 
 def generar_reporte_basico(filtros):
     datos = []
-    registros = EmpleadoTurno.objects.select_related('empleado', 'turno')
+    punches = AttPunch.objects.select_related('employee').order_by('punch_time')
 
     if filtros.get('cedula'):
-        registros = registros.filter(empleado__emp_pin__icontains=filtros['cedula'])
+        punches = punches.filter(employee__emp_pin__icontains=filtros['cedula'])
     if filtros.get('desde'):
-        registros = registros.filter(fecha__gte=filtros['desde'])
+        punches = punches.filter(punch_time__date__gte=filtros['desde'])
     if filtros.get('hasta'):
-        registros = registros.filter(fecha__lte=filtros['hasta'])
+        punches = punches.filter(punch_time__date__lte=filtros['hasta'])
 
-    for r in registros:
-        datos.append({
-            'cedula': r.empleado.emp_pin,
-            'nombre': r.empleado.emp_firstname,
-            'apellidos': r.empleado.emp_lastname,
-            'grupo': r.empleado.emp_group.nombre if r.empleado.emp_group else '',
-            'fecha': r.fecha,
-            'turno': r.turno.shift_name,
-            'entradas_salidas': [r.hora_entrada, r.hora_salida]  # Esto lo usas en tu HTML
-        })
+    agrupado = defaultdict(lambda: defaultdict(list))
+    for p in punches:
+        empleado = p.employee
+        fecha = p.punch_time.date()
+        agrupado[empleado][fecha].append(p.punch_time)
+
+    for empleado, dias in agrupado.items():
+        grupo = empleado.emp_group.nombre.lower() if empleado.emp_group else ''
+        for fecha, marcas in dias.items():
+            marcas_ordenadas = sorted(marcas)
+            entrada = marcas_ordenadas[0].time()
+            salida = marcas_ordenadas[-1].time() if len(marcas_ordenadas) > 1 else None
+            turno = detectar_turno(entrada, salida, grupo) if salida else None
+
+            datos.append({
+                'cedula': empleado.emp_pin,
+                'nombre': empleado.emp_firstname,
+                'apellidos': empleado.emp_lastname,
+                'grupo': empleado.emp_group.nombre if empleado.emp_group else '',
+                'fecha': fecha,
+                'turno': turno["nombre"] if turno else '',
+                'entradas_salidas': marcas_ordenadas
+            })
 
     return datos
 
@@ -181,17 +194,12 @@ def agrupar_marcaciones_3(marcaciones):
 # ========================
 @transaction.atomic
 def procesar_marcaciones(fecha_inicio, fecha_fin):
-    
     primer_punch = AttPunch.objects.earliest("punch_time").punch_time
     ultimo_punch = AttPunch.objects.latest("punch_time").punch_time
-
     fecha_inicio = primer_punch.date()
     fecha_fin = ultimo_punch.date()
     
     print(f"📅 Procesando desde {fecha_inicio} hasta {fecha_fin}")
-    
-    
-    
     empleados = HrEmployee.objects.all()
 
     for empleado in empleados:
@@ -208,11 +216,9 @@ def procesar_marcaciones(fecha_inicio, fecha_fin):
             continue
 
         marcaciones_list = list(marcaciones)  # queryset con objetos AttPunch
-
         fechas_turno_3 = set()
 
         bloques_turno_3 = agrupar_marcaciones_3(marcaciones_list)
-
         for entrada, salida in bloques_turno_3:
             fecha = salida.date()  # Turno 3 cruza de día, la fecha debe ser la de salida
             festivo = es_festivo(fecha)
@@ -255,6 +261,10 @@ def procesar_marcaciones(fecha_inicio, fecha_fin):
             f = m.punch_time.date()
             if f not in fechas_turno_3:
                 dias[f].append(m.punch_time)
+                
+                
+                
+                
 
         for fecha, marcas in dias.items():
             if len(marcas) < 2:
@@ -341,3 +351,6 @@ def procesar_marcaciones(fecha_inicio, fecha_fin):
                         "aprobado_por_lider": False
                     }
                 )
+                     # ✅ Registro de asistencia sin salida (empleado aún en empresa)
+    
+       
