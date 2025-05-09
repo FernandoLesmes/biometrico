@@ -5,14 +5,24 @@
     <title>Asistencia</title>
     
     {% load static %}  <!-- 🔹 IMPORTANTE: Cargar archivos estáticos -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/configuracion.css' %}">
 </head>
 <body>
 
     <!-- Encabezado con el Logo -->
+    {% load static %}
     <header>
         <img src="{% static 'img/logo.png' %}" alt="Logo" class="header-img">
+
+    <div class="grid-container">
+        <a href="{% url 'turnos' %}" class="box">Turnos</a>
+        <a href="{% url 'empleados' %}" class="box">Empleados</a>
+        <a href="{% url 'grupos' %}" class="box">Grupos</a>
+        <a href="{% url 'reportes' %}" class="box">Reportes</a>
+        <a href="{% url 'configuracion' %}" class="box">Configuraciones</a>
+    </div>
     </header>
+    
 
     <h1>Cofiguracion</h1>
     <a href="{% url 'home' %}">Volver al Inicio</a>

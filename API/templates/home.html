@@ -9,24 +9,32 @@
 </head>
 <body>
     <!-- Imagen de encabezado -->
+   <!-- Encabezado con logo y nombre -->
+
+
+   {% load static %}
     <header>
         <img src="{% static 'img/logo.png' %}" alt="Logo" class="header-img">
+
+    <div class="grid-container">
+        <a href="{% url 'turnos' %}" class="box">Turnos</a>
+        <a href="{% url 'empleados' %}" class="box">Empleados</a>
+        <a href="{% url 'grupos' %}" class="box">Grupos</a>
+        <a href="{% url 'reportes' %}" class="box">Reportes</a>
+        <a href="{% url 'configuracion' %}" class="box">Configuraciones</a>
+    </div>
     </header>
 
-    <div class="container">
-        <h2>Bienvenido, {{ user.username }}: Sistema de gestion de turnos y control de ingresos y salidas</h2>
+    <!-- Mensaje de bienvenida -->
+    <h2 class="bienvenida">
+        Bienvenido, {{ user.username }}: Sistema de gestión de turnos y control de ingresos y salidas
+    </h2>
 
-        <!-- Sección con 6 cuadros -->
-        <div class="grid-container">
-            <a href="{% url 'turnos' %}" class="box">Turnos</a>
-            <a href="{% url 'empleados' %}" class="box">Empleados</a>
-            <a href="{% url 'grupos' %}" class="box">Grupos</a>
-            <a href="{% url 'reportes' %}" class="box">Reportes</a>
-            <a href="{% url 'configuracion' %}" class="box">Configuraciones</a>
-            
-        </div>
+</div>
 
-    </div>
+
+
+
 
 
 </body>

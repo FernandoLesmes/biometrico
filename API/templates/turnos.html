@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+
+
+
     <meta charset="UTF-8">
     <title>Lista de Turnos</title>
+    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js">
@@ -36,6 +40,20 @@
     </style>
 </head>
 <body>
+    <!-- Imagen de encabezado -->
+    {% load static %}
+    <header>
+        <img src="{% static 'img/logo.png' %}" alt="Logo" class="header-img">
+
+    <div class="grid-container">
+        <a href="{% url 'turnos' %}" class="box">Turnos</a>
+        <a href="{% url 'empleados' %}" class="box">Empleados</a>
+        <a href="{% url 'grupos' %}" class="box">Grupos</a>
+        <a href="{% url 'reportes' %}" class="box">Reportes</a>
+        <a href="{% url 'configuracion' %}" class="box">Configuraciones</a>
+    </div>
+    </header>
+    
     <h1>Lista de Turnos</h1>
     <button id="abrirModal">Crear Nuevo Turno</button>
 
