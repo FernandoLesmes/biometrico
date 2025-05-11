@@ -79,3 +79,247 @@ header {
     font-weight: bold;
     margin-top: 20px;
 }
+
+
+
+
+.box {
+    color: black;
+    text-decoration: none;
+    padding: 10px;
+    font-weight: bold;
+}
+
+.box.activo {
+    color: blue;
+    border-bottom: 3px solid blue;
+}
+
+
+
+
+
+
+
+#abrirModal {
+    display: block;
+    margin: 30px auto;
+    padding: 12px 24px;
+    background-color: #007bff; /* Azul brillante */
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#abrirModal:hover {
+    background-color: #0056b3; /* Azul más oscuro al pasar el mouse */
+}
+
+
+
+
+
+
+
+
+.modal-content {
+    background-color: #fff;
+    margin: 5% auto;
+    padding: 20px;
+    width: 90%;
+    max-width: 420px; /* 🔹 Más pequeño */
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-content h2 {
+    text-align: center;
+    font-size: 20px;
+    margin-bottom: 15px;
+    color: #111;
+}
+
+.modal-content label {
+    display: block;
+    margin-top: 10px;
+    font-weight: 700;
+    color: #222; /* 🔹 Más oscuro */
+    font-size: 14px;
+}
+
+.modal-content input,
+.modal-content select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.modal-content button[type="submit"] {
+    display: block;
+    margin: 20px auto 0;
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.modal-content button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+.close {
+    float: right;
+    font-size: 20px;
+    font-weight: bold;
+    color: red;
+    cursor: pointer;
+}
+
+
+
+
+/* cuadro de tabla turno*/
+/* Estilo general de la tabla */
+#turnosTable {
+    width: 95%;
+    margin: 20px auto;
+    border-collapse: collapse;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 14px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* Encabezados */
+#turnosTable thead {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+#turnosTable thead th {
+    padding: 12px 8px;
+    border-bottom: 2px solid #ccc;
+}
+
+/* Filas */
+#turnosTable tbody td {
+    padding: 10px 6px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Alternar color de fondo en filas */
+#turnosTable tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* Botones */
+#turnosTable .editar {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+#turnosTable .eliminar {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-left: 5px;
+}
+
+#turnosTable .editar:hover {
+    background-color: #0056b3;
+}
+
+#turnosTable .eliminar:hover {
+    background-color: #a71d2a;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+
+
+
+
+
+
+/* buscar */
+/* 🔍 Estilo buscador DataTable */
+/* 🔍 Estilo para el buscador de DataTables */
+.dataTables_filter {
+    width: 95%;
+    margin: 0 auto 20px auto;
+    text-align: right;
+    padding-right: 50px;  /* Ajusta si quieres más separación */
+}
+
+.dataTables_filter label {
+    font-weight: bold;
+    font-size: 14px;
+    color: #333;
+}
+
+.dataTables_filter input {
+    padding: 6px 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    width: 220px;
+    margin-left: 10px;
+}
+
+
+
+
+
+
+/* boon cerrar sesion */
+.volver-inicio {
+    text-align: center;
+    margin: 30px 0;
+}
+
+.volver-inicio a {
+    display: inline-block;
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    font-weight: 500;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: background-color 0.3s ease;
+}
+
+.volver-inicio a:hover {
+    background-color: #0056b3;
+}

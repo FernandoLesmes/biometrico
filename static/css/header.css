@@ -1,0 +1,61 @@
+/* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* HEADER GENERAL */
+.main-header {
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 40px;
+    border-bottom: 1px solid #ccc;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* LOGO */
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    height: 45px;
+    margin-right: 10px;
+}
+
+/* NAVEGACIÓN */
+.grid-container {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.grid-container a {
+    text-decoration: none;
+    color: #222;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 8px 10px;
+    transition: color 0.3s ease;
+}
+
+.grid-container a:hover {
+    color: #007bff;
+}
+
+/* BIENVENIDA */
+.bienvenida {
+    margin: 30px;
+    font-size: 20px;
+    font-weight: 500;
+    color: #333;
+    text-align: center;
+}

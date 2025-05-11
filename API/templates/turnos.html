@@ -18,11 +18,11 @@
         <img src="{% static 'img/logo.png' %}" alt="Logo" class="header-img">
 
     <div class="grid-container">
-        <a href="{% url 'turnos' %}" class="box">Turnos</a>
-        <a href="{% url 'empleados' %}" class="box">Empleados</a>
-        <a href="{% url 'grupos' %}" class="box">Grupos</a>
-        <a href="{% url 'reportes' %}" class="box">Reportes</a>
-        <a href="{% url 'configuracion' %}" class="box">Configuraciones</a>
+        <a href="{% url 'turnos' %}" class="box {% if request.path == '/turnos/' %}activo{% endif %}">Turnos</a>
+        <a href="{% url 'empleados' %}" class="box {% if request.path == '/empleados/' %}activo{% endif %}">Empleados</a>
+        <a href="{% url 'grupos' %}" class="box {% if request.path == '/grupos/' %}activo{% endif %}">Grupos</a>
+        <a href="{% url 'reportes' %}" class="box {% if request.path == '/reportes/' %}activo{% endif %}">Reportes</a>
+        <a href="{% url 'configuracion' %}" class="box {% if request.path == '/configuracion/' %}activo{% endif %}">Configuraciones</a>
     </div>
     </header>
     
@@ -33,6 +33,7 @@
     <button id="abrirModal">Crear Nuevo Turno</button>
 
     <table id="turnosTable" border="1">
+        
         <thead>
             <tr>
                 <th>ID</th>
@@ -121,27 +122,40 @@
 </div>
 
 
+
 <script>
     $(document).ready(function () {
-        $("#turnosTable").DataTable();
-    
+        $("#turnosTable").DataTable({
+            dom: 'f', // Solo el buscador
+            language: {
+                search: "🔍 Buscar:",
+                zeroRecords: "No se encontraron registros.",
+                infoEmpty: "",
+                infoFiltered: "",
+                paginate: {
+                    previous: "",
+                    next: ""
+                }
+            }
+        });
+
         // 🔥 Abrir el modal
         $("#abrirModal").click(function () {
             console.log("✅ Modal abierto");
             $("#modalTurno").fadeIn();
         });
-    
+
         // 🔥 Cerrar el modal
         $(".close").click(function () {
             console.log("❌ Modal cerrado");
             $("#modalTurno").fadeOut();
         });
-    
-        // 🔥 Verificar si el formulario se envía
+
+        // 🔥 Enviar formulario
         $("#crearTurnoForm").submit(function (event) {
             event.preventDefault();
-            console.log("📩 Formulario enviado");  // 🔥 Debe aparecer en la consola
-    
+            console.log("📩 Formulario enviado");
+
             let data = {
                 shift_name: $("#nombre").val(),
                 start_time: $("#entrada").val(),
@@ -155,17 +169,15 @@
                 status: $("#estado").val(),
                 csrfmiddlewaretoken: "{{ csrf_token }}"
             };
-    
+
             console.log("🔍 Datos a enviar:", data);
-    
+
             $.post("/turnos/crear/", data, function (response) {
                 console.log("✅ Respuesta del servidor:", response);
                 alert("✅ Turno creado con éxito");
-    
-                // 🔥 Cerrar modal después de guardar
+
                 $("#modalTurno").fadeOut();
-    
-                // 🔥 Agregar el turno a la tabla sin recargar
+
                 $("#turnosTable tbody").append(`
                     <tr>
                         <td>${response.id}</td>
@@ -182,8 +194,7 @@
                         <td><button class="editar">Editar</button> | <button class="eliminar">Eliminar</button></td>
                     </tr>
                 `);
-    
-                // 🔥 Limpiar el formulario
+
                 $("#crearTurnoForm")[0].reset();
             }).fail(function (error) {
                 console.log("❌ Error en la petición:", error.responseText);
@@ -191,11 +202,14 @@
             });
         });
     });
-    
 </script>
 
 
-    <a href="{% url 'home' %}">Volver al Inicio</a>
+
+<div class="volver-inicio">
+    <a href="{% url 'home' %}">⬅ Volver al Inicio</a>
+</div>
+
 
 </body>
 </html>

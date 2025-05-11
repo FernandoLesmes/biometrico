@@ -27,22 +27,22 @@
 
     <!-- Mensaje de bienvenida -->
     <h2 class="bienvenida">
-        Bienvenido, {{ user.username }}: Sistema de gestión de turnos y control de ingresos y salidas
+        👋 Bienvenido, <span class="usuario">{{ user.username }}</span><br>
+        <span class="subtitulo">Sistema de gestión de turnos y control de ingresos y salidas</span>
     </h2>
-
+    
+    
 </div>
-
-
-
-
-
-
 </body>
 
 
-<form method="post" action="{% url 'logout' %}">
-    {% csrf_token %}
-    <button type="submit">Cerrar sesión</button>
-</form>
+<div class="cerrar-sesion-container">
+    <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn-cerrar-sesion">Cerrar sesión</button>
+    </form>
+</div>
+
+
 </html>
 
