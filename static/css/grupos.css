@@ -60,12 +60,20 @@ th, td {
     text-align: center;
 }
 
+
+
 #abrirModalGrupo, .btn {
-    margin: 20px;
-    padding: 10px;
-    background: blue;
+    display: block;
+    margin: 30px auto;
+    padding: 12px 24px;
+    background-color: #007bff; /* Azul brillante */
     color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
     cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
 /* Modal */
@@ -121,7 +129,7 @@ th, td {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 34px; /* puedes ajustar el tamaño */
     font-weight: bold;
-    margin-top: 20px;
+   
 }
 
 

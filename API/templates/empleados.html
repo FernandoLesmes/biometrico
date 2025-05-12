@@ -1,4 +1,4 @@
-<!-- empleados.html -->
+<!-- empleados.html adaptado con modal como turnos -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -6,87 +6,90 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Empleados</title>
     {% load static %}
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="{% static 'css/empleados.css' %}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-
-    {% load static %}
     <header>
         <img src="{% static 'img/logo.png' %}" alt="Logo" class="header-img">
-
-    <div class="grid-container">
-        <a href="{% url 'turnos' %}" class="box {% if request.path == '/turnos/' %}activo{% endif %}">Turnos</a>
-        <a href="{% url 'empleados' %}" class="box {% if request.path == '/empleados/' %}activo{% endif %}">Empleados</a>
-        <a href="{% url 'grupos' %}" class="box {% if request.path == '/grupos/' %}activo{% endif %}">Grupos</a>
-        <a href="{% url 'reportes' %}" class="box {% if request.path == '/reportes/' %}activo{% endif %}">Reportes</a>
-        <a href="{% url 'configuracion' %}" class="box {% if request.path == '/configuracion/' %}activo{% endif %}">Configuraciones</a>
-    </div>
+        <div class="grid-container">
+            <a href="{% url 'turnos' %}" class="box {% if request.path == '/turnos/' %}activo{% endif %}">Turnos</a>
+            <a href="{% url 'empleados' %}" class="box {% if request.path == '/empleados/' %}activo{% endif %}">Empleados</a>
+            <a href="{% url 'grupos' %}" class="box {% if request.path == '/grupos/' %}activo{% endif %}">Grupos</a>
+            <a href="{% url 'reportes' %}" class="box {% if request.path == '/reportes/' %}activo{% endif %}">Reportes</a>
+            <a href="{% url 'configuracion' %}" class="box {% if request.path == '/configuracion/' %}activo{% endif %}">Configuraciones</a>
+        </div>
     </header>
-    
-
 
     <h1 class="titulo-empleados">Gestión de Empleados</h1>
+    
+    <button id="abrirModalEmpleado">Agregar Nuevo Empleado</button>
 
-    <form method="POST" action="{% url 'crear_empleado' %}">
-        {% csrf_token %}
+    <!-- Modal Empleado -->
+    <div id="modalEmpleado" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Agregar Nuevo Empleado</h2>
+            <form method="POST" action="{% url 'crear_empleado' %}">
+                {% csrf_token %}
+                <label for="emp_pin">Cédula:</label>
+                <input type="text" name="emp_pin" required>
 
-        <label for="emp_pin">Cédula:</label>
-        <input type="text" name="emp_pin" required>
+                <label for="emp_firstname">Nombre:</label>
+                <input type="text" name="emp_firstname" required>
 
-        <label for="emp_firstname">Nombre:</label>
-        <input type="text" name="emp_firstname" required>
+                <label for="emp_lastname">Apellido:</label>
+                <input type="text" name="emp_lastname" required>
 
-        <label for="emp_lastname">Apellido:</label>
-        <input type="text" name="emp_lastname" required>
+                <label for="emp_job">Cargo:</label>
+                <select name="emp_job" required>
+                    <option value="" selected disabled>Seleccione un Cargo</option>
+                    {% for cargo in cargos %}
+                        <option value="{{ cargo.id }}">{{ cargo.nombre }}</option>
+                    {% endfor %}
+                </select>
 
-        <label for="emp_job">Cargo:</label>
-        <select name="emp_job" required>
-            <option value="" selected disabled>Seleccione un Cargo</option>
-            {% for cargo in cargos %}
-                <option value="{{ cargo.id }}">{{ cargo.nombre }}</option>
-            {% endfor %}
-        </select>
+                <label for="emp_group">Grupo:</label>
+                <select name="emp_group" required>
+                    <option value="" selected disabled>Seleccione un Grupo</option>
+                    {% for grupo in grupos %}
+                        <option value="{{ grupo.id }}">{{ grupo.nombre }}</option>
+                    {% endfor %}
+                </select>
 
-        <label for="emp_group">Grupo:</label>
-        <select name="emp_group" required>
-            <option value="" selected disabled>Seleccione un Grupo</option>
-            {% for grupo in grupos %}
-                <option value="{{ grupo.id }}">{{ grupo.nombre }}</option>
-            {% endfor %}
-        </select>
+                <label for="emp_role">Rol:</label>
+                <select name="emp_role" required>
+                    <option value="" selected disabled>Seleccione un Rol</option>
+                    {% for rol in roles %}
+                        <option value="{{ rol.id }}">{{ rol.nombre }}</option>
+                    {% endfor %}
+                </select>
 
-        <label for="emp_role">Rol:</label>
-        <select name="emp_role" required>
-            <option value="" selected disabled>Seleccione un Rol</option>
-            {% for rol in roles %}
-                <option value="{{ rol.id }}">{{ rol.nombre }}</option>
-            {% endfor %}
-        </select>
+                <label for="emp_cost_center">Centro de Costo:</label>
+                <select name="emp_cost_center" required>
+                    <option value="" selected disabled>Seleccione un Centro de Costo</option>
+                    {% for centro in centros_costos %}
+                        <option value="{{ centro.id }}">{{ centro.nombre }}</option>
+                    {% endfor %}
+                </select>
 
-        <label for="emp_cost_center">Centro de Costo:</label>
-        <select name="emp_cost_center" required>
-            <option value="" selected disabled>Seleccione un Centro de Costo</option>
-            {% for centro in centros_costos %}
-                <option value="{{ centro.id }}">{{ centro.nombre }}</option>
-            {% endfor %}
-        </select>
+                <label for="emp_email">Correo:</label>
+                <input type="email" name="emp_email" required>
 
-        <label for="emp_email">Correo:</label>
-        <input type="email" name="emp_email" required>
+                <label for="emp_active">Activo:</label>
+                <input type="checkbox" name="emp_active">
 
-        <label for="emp_active">Activo:</label>
-        <input type="checkbox" name="emp_active">
-
-        <button type="submit">Guardar</button>
-    </form>
+                <button type="submit">Guardar</button>
+            </form>
+        </div>
+    </div>
 
     {% if error %}
-        <p style="color: red;">Error: {{ error }}</p>
+        <p style="color: red; text-align: center">Error: {{ error }}</p>
     {% endif %}
 
-    <h2>Lista de Empleados</h2>
-    <table border="1">
+    <h2 style="text-align: center">Lista de Empleados</h2>
+    <table border="1" id="tablaEmpleados">
         <thead>
             <tr>
                 <th>Cédula</th>
@@ -111,7 +114,7 @@
                 <td>{{ empleado.emp_role.nombre }}</td>
                 <td>{{ empleado.emp_cost_center.nombre }}</td>
                 <td>{{ empleado.emp_email }}</td>
-                
+                <td>{{ empleado.emp_active|yesno:"Activo,Inactivo" }}</td>
             </tr>
             {% empty %}
             <tr>
@@ -121,8 +124,22 @@
         </tbody>
     </table>
 
-    <a href="{% url 'home' %}">Volver al Inicio</a>
+    <div class="volver-inicio">
+        <a href="{% url 'home' %}">⬅ Volver al Inicio</a>
+    </div>
 
+    <script>
+        $(document).ready(function () {
+            $("#abrirModalEmpleado").click(function () {
+                $("#modalEmpleado").fadeIn();
+            });
+
+            $(".close").click(function () {
+                $("#modalEmpleado").fadeOut();
+            });
+        });
+    </script>
 </body>
 </html>
+
 
