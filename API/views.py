@@ -153,6 +153,8 @@ def reporte_turnos(request):
 def reportes_view(request):
     tipo = request.GET.get("tipo", "basico")
     cedula = request.GET.get("cedula")
+    apellidos = request.GET.get("apellidos")
+    grupo = request.GET.get("grupo")
     desde = request.GET.get("desde")
     hasta = request.GET.get("hasta")
 
@@ -164,6 +166,8 @@ def reportes_view(request):
         procesar_marcaciones(fecha_inicio, fecha_fin)
 
     filtros = {
+        'apellidos': apellidos,
+        'grupo': grupo,
         'cedula': cedula,
         'desde': fecha_inicio,
         'hasta': fecha_fin,

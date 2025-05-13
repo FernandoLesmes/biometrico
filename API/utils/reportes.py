@@ -34,6 +34,14 @@ def generar_reporte_basico(filtros):
 
     if filtros.get('cedula'):
         punches = punches.filter(employee__emp_pin__icontains=filtros['cedula'])
+        
+    if filtros.get("apellidos"):
+        punches = punches.filter(employee__emp_lastname__icontains=filtros["apellidos"])
+
+    
+    if filtros.get("grupo"):
+        punches = punches.filter(employee__emp_group__nombre__icontains=filtros["grupo"])  
+
     if filtros.get('desde'):
         punches = punches.filter(punch_time__date__gte=filtros['desde'])
     if filtros.get('hasta'):
@@ -74,12 +82,20 @@ def generar_reporte_basico(filtros):
 # ========================
 def reporte_horas_extras(filtros):
     datos = []
-    registros = EmpleadoTurno.objects.select_related('empleado', 'turno')
+    registros = EmpleadoTurno.objects.select_related('empleado', 'turno', 'empleado__emp_group')
 
     if filtros.get('cedula'):
         registros = registros.filter(empleado__emp_pin__icontains=filtros['cedula'])
+
+    if filtros.get('apellidos'):
+        registros = registros.filter(empleado__emp_lastname__icontains=filtros['apellidos'])
+
+    if filtros.get('grupo'):
+        registros = registros.filter(empleado__emp_group__nombre__icontains=filtros['grupo'])
+
     if filtros.get('desde'):
         registros = registros.filter(fecha__gte=filtros['desde'])
+
     if filtros.get('hasta'):
         registros = registros.filter(fecha__lte=filtros['hasta'])
 
@@ -105,11 +121,14 @@ def reporte_horas_extras(filtros):
     return datos
 
 
+
 # ========================
 # ✅ Vista de reportes (unificada)
 # ========================
 def reportes_view(request):
     tipo = request.GET.get("tipo", "basico")
+    apellidos = request.GET.get("apellidos")
+    grupo = request.GET.get("grupo")
     cedula = request.GET.get("cedula")
     desde = request.GET.get("desde")
     hasta = request.GET.get("hasta")
@@ -129,6 +148,8 @@ def reportes_view(request):
         procesar_marcaciones(fecha_inicio, fecha_fin)
 
     filtros = {
+        'apellidos': apellidos,
+        'grupo': grupo,
         'cedula': cedula,
         'desde': fecha_inicio,
         'hasta': fecha_fin,

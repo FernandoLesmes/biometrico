@@ -23,28 +23,65 @@
 
     <h1 class="titulo-reportes">Gestión de asistencia</h1>
 
-    <form method="get">
-        <label for="tipo">Tipo de Reporte:</label>
-        <select name="tipo" id="tipo" onchange="this.form.submit()">
-            <option value="basico" {% if tipo == 'basico' %}selected{% endif %}>Asistencia Básica</option>
-            <option value="horas_extras" {% if tipo == 'horas_extras' %}selected{% endif %}>Horas Extras</option>
-        </select>
-    
-        <label>Cédula:</label>
-        <input type="text" name="cedula" value="{{ request.GET.cedula }}">
-    
-        <label>Desde:</label>
-        <input type="date" name="desde" value="{{ request.GET.desde }}">
-    
-        <label>Hasta:</label>
-        <input type="date" name="hasta" value="{{ request.GET.hasta }}">
-    
-        <button type="submit">Filtrar</button>
+    <form method="get" action="{% url 'procesar_marcaciones' %}" class="procesar-form" onsubmit="mostrarCarga()">
+        <button type="submit" class="btn-procesar">
+            🔄 Procesar Marcaciones
+        </button>
     </form>
+    
+    <div id="cargando" class="cargando-spinner" style="display: none;">
+        <div class="spinner"></div>
+        <span class="mensaje-cargando">Procesando marcaciones...</span>
+    </div>
+    
+    
+
+    <form method="get" class="formulario-filtros">
+        <fieldset class="filtros-grid">
+            <div class="campo">
+                <label for="tipo">Tipo de Reporte:</label>
+                <select name="tipo" id="tipo" onchange="this.form.submit()">
+                    <option value="basico" {% if tipo == 'basico' %}selected{% endif %}>Asistencia Básica</option>
+                    <option value="horas_extras" {% if tipo == 'horas_extras' %}selected{% endif %}>Horas Extras</option>
+                </select>
+            </div>
+    
+            <div class="campo">
+                <label>Cédula:</label>
+                <input type="text" name="cedula" value="{{ request.GET.cedula }}">
+            </div>
+    
+            <div class="campo">
+                <label>Apellido:</label>
+                <input type="text" name="apellidos" value="{{ request.GET.apellidos }}">
+            </div>
+    
+            <div class="campo">
+                <label>Grupo:</label>
+                <input type="text" name="grupo" value="{{ request.GET.grupo }}">
+            </div>
+    
+            <div class="campo">
+                <label>Desde:</label>
+                <input type="date" name="desde" value="{{ request.GET.desde }}">
+            </div>
+    
+            <div class="campo">
+                <label>Hasta:</label>
+                <input type="date" name="hasta" value="{{ request.GET.hasta }}">
+            </div>
+    
+            <div class="boton-filtrar">
+                <button type="submit" class="btn btn-primary">Filtrar</button>
+            </div>
+        </fieldset>
+    </form>
+    
+    
     
 
     {% if tipo == 'basico' %}
-        <h2>Asistencia Básica</h2>
+        <h2 class="titulo-reportes">Asistencia Básica</h2>
         <table border="1">
             <thead>
                 <tr>
@@ -80,9 +117,7 @@
                     {% endfor %}
             
                     {# Rellenar con celdas vacías si hay menos de 8 marcas #}
-                    {% for i in "12345678"|slice:8|slice:":{{ 8|add:-r.entradas_salidas|length }}" %}
-                        <td></td>
-                    {% endfor %} 
+                    
                 </tr>
                 {% endfor %}
             </tbody>
@@ -90,7 +125,7 @@
         </table>
 
     {% else %}
-        <h2>Reporte de Horas Extras</h2>
+    <h2 class="titulo-reportes">Reporte de Horas Extras</h2>
         <table border="1">
             <thead>
                 <tr>
@@ -142,6 +177,15 @@
         </button>
     </form>
     
+
+
+    <script>
+        function mostrarCarga() {
+            document.getElementById("cargando").style.display = "flex";
+        }
+    </script>
+        
+
 
 </body>
 </html>
