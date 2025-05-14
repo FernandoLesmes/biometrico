@@ -82,7 +82,8 @@
 
     {% if tipo == 'basico' %}
         <h2 class="titulo-reportes">Asistencia Básica</h2>
-        <table border="1">
+
+        <table id="tablaEmpleados">
             <thead>
                 <tr>
                     <th>Cédula</th>
@@ -110,23 +111,29 @@
                     <td>{{ r.grupo }}</td>
                     <td>{{ r.fecha }}</td>
                     <td>{{ r.turno }}</td>
-            
+        
                     {# Mostrar las marcas #}
                     {% for marca in r.entradas_salidas %}
                         <td>{{ marca|time:"H:i" }}</td>
                     {% endfor %}
-            
+        
                     {# Rellenar con celdas vacías si hay menos de 8 marcas #}
                     
+
+                    {# ✅ Rellenar con celdas vacías si hay menos de 8 marcas #}
+                    {% for i in "12345678"|slice:":{{ 8|add:-r.entradas_salidas|length }}" %}
+                        <td></td>
+                        {% endfor %}
+
                 </tr>
                 {% endfor %}
             </tbody>
-            
         </table>
+        
 
     {% else %}
     <h2 class="titulo-reportes">Reporte de Horas Extras</h2>
-        <table border="1">
+        <table id="tablaEmpleados">
             <thead>
                 <tr>
                     <th>Cédula</th>

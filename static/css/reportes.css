@@ -191,3 +191,42 @@ header {
     font-weight: bold;
     margin-top: 20px;
 }
+
+
+
+
+
+
+
+
+
+
+#tablaEmpleados {
+    width: 95%;
+    margin: 20px auto;
+    border-collapse: collapse; /* 🔧 Asegura que los bordes se unan sin espacios */
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 14px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* ✅ Opcional para que se vea como las otras tablas */
+}
+
+#tablaEmpleados th,
+#tablaEmpleados td {
+    border: 1px solid #ccc; /* ✅ Borde gris suave y uniforme */
+    padding: 10px 6px;
+    text-align: center;
+}
+
+#tablaEmpleados thead {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+#tablaEmpleados thead th {
+    font-weight: bold;
+}
+
+#tablaEmpleados tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
