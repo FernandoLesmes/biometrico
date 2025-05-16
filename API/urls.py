@@ -6,6 +6,9 @@ from .views import lista_grupos
 from .views import obtener_grupos
 from .views import lista_empleados, crear_empleado
 from .views import reportes_view
+from API.views import ejecutar_procesamiento
+
+
 urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
@@ -21,7 +24,7 @@ urlpatterns = [
     path("turnos/", views.lista_turnos, name="turnos"),
     path("turnos/crear/", views.crear_turno, name="crear_turno"),
     path("turnos/editar/<int:id>/", views.editar_turno, name="editar_turno"),
-    path("turnos/eliminar/<int:id>/", views.eliminar_turno, name="eliminar_turno"),
+    #path("turnos/eliminar/<int:id>/", views.eliminar_turno, name="eliminar_turno"),
     #grupos
     path("grupos/", lista_grupos, name="grupos"),
     path("grupos/crear/", crear_grupo, name="crear_grupo"),
@@ -30,17 +33,28 @@ urlpatterns = [
     
     #empleados
     path('empleados/', lista_empleados, name='empleados'),
-    path('empleados/', lista_empleados, name="lista_empleados"),
+    #path('empleados/', lista_empleados, name="lista_empleados"),
     path('empleados/crear/', crear_empleado, name="crear_empleado"),
     
     # empleado turno, definimos reportes para horas extras
     path('reportes/turnos/', views.reporte_turnos, name='reporte_turnos'),
 
     #solo reportes basicos 
-    path('reportes', views.reportes_view, name='reportes'),
+    path('reportes', views.reportes_view, name='reportes_view'),
     
     #reportes de horas extras
     path('reportes/horas_extras', views.reporte_horas_extras, name='reporte_horas_extras'),
+    path('procesar-marcaciones/', ejecutar_procesamiento, name='procesar_marcaciones'),
+
+   
+    path("turnos/cambiar_estado/", views.cambiar_estado_turno, name="cambiar_estado_turno"),
+    
+
+    
+
+   
+
+    
 
     
 ]

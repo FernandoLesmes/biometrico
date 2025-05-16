@@ -1,86 +1,50 @@
-import os
-import sys
-import django
-import csv
 from zk import ZK
 from datetime import datetime
-from collections import defaultdict
 
-# Configuración de Django
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/..")
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
-django.setup()
-
-# Configuración del biométrico
 BIOMETRICO_IP = "192.168.0.211"
 PUERTO = 4370
 
-# Ruta para guardar el archivo en Documentos
-ruta_documentos = os.path.join(os.path.expanduser("~"), "Documents", "registros_biometrico.csv")
+cedula_usuario = "1051287060"
+fecha_inicio = datetime(2025, 4, 22)
+fecha_fin = datetime(2025, 4, 24)
 
-def extraer_registros():
-    zk = ZK(BIOMETRICO_IP, port=PUERTO, timeout=5)
-    conn = None
+zk = ZK(BIOMETRICO_IP, port=PUERTO, timeout=20, password=0, force_udp=False, ommit_ping=True)
 
-    try:
-        print("⏳ Conectando al biométrico...")
-        conn = zk.connect()
-        print("✅ Conectado al biométrico")
+try:
+    print("⏳ Conectando al biométrico...")
+    conn = zk.connect()
+    conn.disable_device()
 
-        # Obtener registros de asistencia
-        registros = conn.get_attendance()
-        if not registros:
-            print("⚠ No hay registros en el biométrico.")
-            return
+    print(f"👤 Buscando datos del usuario {cedula_usuario}...")
+    usuarios = conn.get_users()
+    user_found = False
 
-        # Obtener la lista de usuarios registrados en el biométrico
-        usuarios = conn.get_users()
-        user_info = {u.uid: u.name for u in usuarios}  # Diccionario de ID -> Nombre
+    for user in usuarios:
+        if str(user.user_id) == cedula_usuario:
+            user_found = True
+            print("🔍 Datos del usuario:")
+            print(f"🆔 user_id: {user.user_id}")
+            print(f"🔢 uid interno: {user.uid}")
+            print(f"📛 nombre: {user.name}")
+            print(f"🧾 privilegio: {user.privilege}")
+            print(f"🧩 grupo: {user.group_id}")
+            print(f"🃏 tarjeta: {user.card}")
+            print(f"🔒 password (si tiene): {user.password}")
+            print("-" * 40)
 
-        # Organizar registros por usuario y fecha
-        registros_por_usuario = defaultdict(list)
-        for r in registros:
-            fecha = r.timestamp.strftime('%Y-%m-%d')  # Extraer solo la fecha
-            registros_por_usuario[(r.user_id, fecha)].append((r.timestamp, r.status))
+    if not user_found:
+        print("⚠️ Usuario no encontrado en el biométrico")
 
-        print("\n📊 **Registros de Entrada y Salida:**")
-        registros_limpios = []
+    print("📥 Obteniendo marcaciones...")
+    registros = conn.get_attendance()
 
-        for (user_id, fecha), registros in registros_por_usuario.items():
-            registros.sort()  # Ordenar por tiempo
-            entrada = None
-            salida = None
-            nombre_usuario = user_info.get(user_id, "Desconocido")  # Buscar nombre por user_id
+    for r in registros:
+        if str(r.user_id) == cedula_usuario and fecha_inicio <= r.timestamp <= fecha_fin:
+            print(f"📅 {r.timestamp} - UID: {r.user_id} - Status: {r.status} - UID interno: {r.uid}")
 
-            for timestamp, status in registros:
-                if status == 1 and entrada is None:  # Primera entrada del día
-                    entrada = timestamp
-                elif status == 16 and entrada is not None:  # Primera salida después de una entrada
-                    salida = timestamp
-                    registros_limpios.append([user_id, nombre_usuario, fecha, entrada.strftime('%H:%M:%S'), salida.strftime('%H:%M:%S')])
-                    entrada = None  # Reiniciar para la siguiente entrada/salida
+    conn.enable_device()
+    conn.disconnect()
 
-            # Si al final del día no hay salida registrada, mostramos advertencia
-            if entrada is not None and salida is None:
-                registros_limpios.append([user_id, nombre_usuario, fecha, entrada.strftime('%H:%M:%S'), "FALTA SALIDA"])
-
-        # Guardar en un archivo CSV dentro de "Documentos"
-        with open(ruta_documentos, "w", newline="") as file:
-            writer = csv.writer(file)
-            writer.writerow(["user_id", "nombre", "fecha", "hora_entrada", "hora_salida"])  # Encabezado
-            writer.writerows(registros_limpios)
-
-        print(f"📂 Datos exportados a '{ruta_documentos}'")
-
-    except Exception as e:
-        print(f"❌ Error al conectar con el biométrico: {e}")
-
-    finally:
-        if conn:
-            conn.disconnect()
-            print("🔌 Desconectado del biométrico")
-
-if __name__ == "__main__":
-    extraer_registros()
-
+except Exception as e:
+    print("❌ Error:", e)
 

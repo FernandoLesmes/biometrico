@@ -3,40 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <title>Reportes</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% load static %}  <!-- 🔹 IMPORTANTE: Cargar archivos estáticos -->
+    <link rel="stylesheet" href="{% static 'css/reportes.css' %}">
 </head>
 <body>
 
+    {% load static %}
     <header>
         <img src="{% static 'img/logo.png' %}" alt="Logo" class="header-img">
+
+    <div class="grid-container">
+        <a href="{% url 'turnos' %}" class="box {% if request.path == '/turnos/' %}activo{% endif %}">Turnos</a>
+        <a href="{% url 'empleados' %}" class="box {% if request.path == '/empleados/' %}activo{% endif %}">Empleados</a>
+        <a href="{% url 'grupos' %}" class="box {% if request.path == '/grupos/' %}activo{% endif %}">Grupos</a>
+        <a href="{% url 'reportes' %}" class="box {% if request.path == '/reportes/' %}activo{% endif %}">Reportes</a>
+        <a href="{% url 'configuracion' %}" class="box {% if request.path == '/configuracion/' %}activo{% endif %}">Configuraciones</a>
+    </div>
     </header>
 
-    <h1>Reportes de asistencia</h1>
+    <h1 class="titulo-reportes">Gestión de asistencia</h1>
 
-    <form method="get">
-        <label for="tipo">Tipo de Reporte:</label>
-        <select name="tipo" id="tipo" onchange="this.form.submit()">
-            <option value="basico" {% if tipo == 'basico' %}selected{% endif %}>Asistencia Básica</option>
-            <option value="horas_extras" {% if tipo == 'horas_extras' %}selected{% endif %}>Horas Extras</option>
-        </select>
-    
-        <label>Cédula:</label>
-        <input type="text" name="cedula" value="{{ request.GET.cedula }}">
-    
-        <label>Desde:</label>
-        <input type="date" name="desde" value="{{ request.GET.desde }}">
-    
-        <label>Hasta:</label>
-        <input type="date" name="hasta" value="{{ request.GET.hasta }}">
-    
-        <button type="submit">Filtrar</button>
+    <form method="get" action="{% url 'procesar_marcaciones' %}" class="procesar-form" onsubmit="mostrarCarga()">
+        <button type="submit" class="btn-procesar">
+            🔄 Procesar Marcaciones
+        </button>
     </form>
+    
+    <div id="cargando" class="cargando-spinner" style="display: none;">
+        <div class="spinner"></div>
+        <span class="mensaje-cargando">Procesando marcaciones...</span>
+    </div>
+    
+    
+
+    <form method="get" class="formulario-filtros">
+        <fieldset class="filtros-grid">
+            <div class="campo">
+                <label for="tipo">Tipo de Reporte:</label>
+                <select name="tipo" id="tipo" onchange="this.form.submit()">
+                    <option value="basico" {% if tipo == 'basico' %}selected{% endif %}>Asistencia Básica</option>
+                    <option value="horas_extras" {% if tipo == 'horas_extras' %}selected{% endif %}>Horas Extras</option>
+                </select>
+            </div>
+    
+            <div class="campo">
+                <label>Cédula:</label>
+                <input type="text" name="cedula" value="{{ request.GET.cedula }}">
+            </div>
+    
+            <div class="campo">
+                <label>Apellido:</label>
+                <input type="text" name="apellidos" value="{{ request.GET.apellidos }}">
+            </div>
+    
+            <div class="campo">
+                <label>Grupo:</label>
+                <input type="text" name="grupo" value="{{ request.GET.grupo }}">
+            </div>
+    
+            <div class="campo">
+                <label>Desde:</label>
+                <input type="date" name="desde" value="{{ request.GET.desde }}">
+            </div>
+    
+            <div class="campo">
+                <label>Hasta:</label>
+                <input type="date" name="hasta" value="{{ request.GET.hasta }}">
+            </div>
+    
+            <div class="boton-filtrar">
+                <button type="submit" class="btn btn-primary">Filtrar</button>
+            </div>
+        </fieldset>
+    </form>
+    
+    
     
 
     {% if tipo == 'basico' %}
-        <h2>Asistencia Básica</h2>
-        <table border="1">
+        <h2 class="titulo-reportes">Asistencia Básica</h2>
+
+        <table id="tablaEmpleados">
             <thead>
                 <tr>
                     <th>Cédula</th>
@@ -64,20 +111,29 @@
                     <td>{{ r.grupo }}</td>
                     <td>{{ r.fecha }}</td>
                     <td>{{ r.turno }}</td>
+        
+                    {# Mostrar las marcas #}
                     {% for marca in r.entradas_salidas %}
                         <td>{{ marca|time:"H:i" }}</td>
                     {% endfor %}
-                    {% for i in "12345678"|slice:8|length|add:'0'|default:0 %}
-                        <td></td>  {# completa si hay menos de 8 marcas #}
-                    {% endfor %}
+        
+                    {# Rellenar con celdas vacías si hay menos de 8 marcas #}
+                    
+
+                    {# ✅ Rellenar con celdas vacías si hay menos de 8 marcas #}
+                    {% for i in "12345678"|slice:":{{ 8|add:-r.entradas_salidas|length }}" %}
+                        <td></td>
+                        {% endfor %}
+
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+        
 
     {% else %}
-        <h2>Reporte de Horas Extras</h2>
-        <table border="1">
+    <h2 class="titulo-reportes">Reporte de Horas Extras</h2>
+        <table id="tablaEmpleados">
             <thead>
                 <tr>
                     <th>Cédula</th>
@@ -122,6 +178,21 @@
     {% endif %}
 
     <a href="{% url 'home' %}" class="btn">Volver al Inicio</a>
+    <form method="get" action="{% url 'procesar_marcaciones' %}">
+        <button type="submit" class="btn btn-primary">
+            🔄 Procesar Marcaciones
+        </button>
+    </form>
+    
+
+
+    <script>
+        function mostrarCarga() {
+            document.getElementById("cargando").style.display = "flex";
+        }
+    </script>
+        
+
 
 </body>
 </html>

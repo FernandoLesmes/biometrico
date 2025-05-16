@@ -1,13 +1,19 @@
-# sync_reloj.py
 from zk import ZK
-import django, os
+import os
+import sys
+from datetime import datetime
+from django.utils.timezone import make_aware
 
-# Configuración del entorno Django
+# Añadir la raíz del proyecto al sys.path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# ✅ Configurar entorno Django antes de importarlo
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
+
+import django
 django.setup()
 
 from API.models import HrEmployee, AttPunch
-from datetime import datetime
 
 DISPOSITIVOS = [
     {'ip': '192.168.0.211', 'nombre': 'BIO-01'},
@@ -15,38 +21,41 @@ DISPOSITIVOS = [
     {'ip': '192.168.4.211', 'nombre': 'BIO-03'},
 ]
 
+# ✅ Fechas fijas para pruebas del 7 al 12 de abril
+FECHA_MINIMA = make_aware(datetime(2025, 4, 20, 21, 59, 0))
+
 def sincronizar_dispositivo(ip, nombre_terminal):
     print(f"📡 Conectando a {nombre_terminal} ({ip})...")
-    zk = ZK(ip, port=4370, timeout=5)
+    zk = ZK(ip, port=4370, timeout=10)
     conn = None
 
     try:
         conn = zk.connect()
         conn.disable_device()
+
         registros = conn.get_attendance()
         insertados = 0
 
         for r in registros:
-            emp_pin = str(r.user_id).strip()
-            punch_time = r.timestamp
-            punch_type = str(r.status)  # 0 = entrada, 1 = salida...
+            marca = make_aware(r.timestamp)
+            if marca >= FECHA_MINIMA:
+                emp_pin = str(r.user_id).strip()
+                punch_type = str(r.status)
 
-            try:
-                empleado = HrEmployee.objects.get(emp_pin=emp_pin)
+                try:
+                    empleado = HrEmployee.objects.get(emp_pin=emp_pin)
 
-                existe = AttPunch.objects.filter(employee=empleado, punch_time=punch_time).exists()
-                if not existe:
-                    AttPunch.objects.create(
-                        employee=empleado,
-                        punch_time=punch_time,
-                        terminal_id=nombre_terminal,
-                        punch_type=punch_type
-                    )
-                    insertados += 1
+                    if not AttPunch.objects.filter(employee=empleado, punch_time=marca).exists():
+                        AttPunch.objects.create(
+                            employee=empleado,
+                            punch_time=marca,
+                            terminal_id=nombre_terminal,
+                            punch_type=punch_type
+                        )
+                        insertados += 1
 
-            except HrEmployee.DoesNotExist:
-                print(f"⚠️ PIN no registrado: {emp_pin}")
-                continue
+                except HrEmployee.DoesNotExist:
+                    print(f"⚠️ PIN no registrado: {emp_pin}")
 
         print(f"✅ {insertados} registros insertados desde {nombre_terminal}.\n")
 
@@ -54,12 +63,14 @@ def sincronizar_dispositivo(ip, nombre_terminal):
         print(f"❌ Error con {nombre_terminal}: {e}")
     finally:
         if conn:
-            conn.enable_device()
-            conn.disconnect()
+            try:
+                conn.enable_device()
+                conn.disconnect()
+            except:
+                pass
             print(f"🔌 {nombre_terminal} desconectado.\n")
 
-# 🔁 Ejecutar sincronización en todos los dispositivos
+# Ejecutar
 if __name__ == "__main__":
     for d in DISPOSITIVOS:
         sincronizar_dispositivo(d['ip'], d['nombre'])
-

@@ -5,36 +5,44 @@
     <title>Página de inicio</title>
     <!-- Cargar la etiqueta de archivos estáticos -->
     {% load static %}
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
 </head>
 <body>
     <!-- Imagen de encabezado -->
+   <!-- Encabezado con logo y nombre -->
+
+
+   {% load static %}
     <header>
         <img src="{% static 'img/logo.png' %}" alt="Logo" class="header-img">
+
+    <div class="grid-container">
+        <a href="{% url 'turnos' %}" class="box">Turnos</a>
+        <a href="{% url 'empleados' %}" class="box">Empleados</a>
+        <a href="{% url 'grupos' %}" class="box">Grupos</a>
+        <a href="{% url 'reportes' %}" class="box">Reportes</a>
+        <a href="{% url 'configuracion' %}" class="box">Configuraciones</a>
+    </div>
     </header>
 
-    <div class="container">
-        <h2>Bienvenido, {{ user.username }}: Sistema de gestion de turnos y control de ingresos y salidas</h2>
-
-        <!-- Sección con 6 cuadros -->
-        <div class="grid-container">
-            <a href="{% url 'turnos' %}" class="box">Turnos</a>
-            <a href="{% url 'empleados' %}" class="box">Empleados</a>
-            <a href="{% url 'grupos' %}" class="box">Grupos</a>
-            <a href="{% url 'reportes' %}" class="box">Reportes</a>
-            <a href="{% url 'configuracion' %}" class="box">Configuraciones</a>
-            
-        </div>
-
-    </div>
-
-
+    <!-- Mensaje de bienvenida -->
+    <h2 class="bienvenida">
+        👋 Bienvenido, <span class="usuario">{{ user.username }}</span><br>
+        <span class="subtitulo">Sistema de gestión de turnos y control de ingresos y salidas</span>
+    </h2>
+    
+    
+</div>
 </body>
 
 
-<form method="post" action="{% url 'logout' %}">
-    {% csrf_token %}
-    <button type="submit">Cerrar sesión</button>
-</form>
+<div class="cerrar-sesion-container">
+    <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn-cerrar-sesion">Cerrar sesión</button>
+    </form>
+</div>
+
+
 </html>
 

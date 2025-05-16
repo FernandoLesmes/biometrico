@@ -1,51 +1,48 @@
-<!DOCTYPE html>
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Grupos</title>
+
+    <!-- CSS personalizado -->
+    <link rel="stylesheet" href="{% static 'css/grupos.css' %}">
+
+    <!-- Librerías externas -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
-    <style>
-        /* Estilos básicos */
-        body { font-family: Arial, sans-serif; text-align: center; }
-        table { width: 80%; margin: 20px auto; border-collapse: collapse; }
-        th, td { border: 1px solid black; padding: 8px; text-align: center; }
-        #abrirModalGrupo { margin: 20px; padding: 10px; background: blue; color: white; cursor: pointer; }
-        .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
-        .modal-content { background-color: white; padding: 20px; margin: 15% auto; width: 30%; }
-        .close { color: red; float: right; font-size: 28px; cursor: pointer; }
-    </style>
 </head>
 <body>
+    <header>
+        <img src="{% static 'img/logo.png' %}" alt="Logo" class="header-img">
+        <div class="grid-container">
+            <a href="{% url 'turnos' %}" class="box {% if request.path == '/turnos/' %}activo{% endif %}">Turnos</a>
+            <a href="{% url 'empleados' %}" class="box {% if request.path == '/empleados/' %}activo{% endif %}">Empleados</a>
+            <a href="{% url 'grupos' %}" class="box {% if request.path == '/grupos/' %}activo{% endif %}">Grupos</a>
+            <a href="{% url 'reportes' %}" class="box {% if request.path == '/reportes/' %}activo{% endif %}">Reportes</a>
+            <a href="{% url 'configuracion' %}" class="box {% if request.path == '/configuracion/' %}activo{% endif %}">Configuraciones</a>
+        </div>
+    </header>
 
-    <h1>Gestión de Grupos</h1>
+    <h1 class="titulo-grupos">Gestión de Grupos</h1>
 
-    <!-- Botón para abrir el modal -->
-    <button id="crearGrupoBtn" class="btn btn-primary">Crear Grupo</button>
+    <button id="crearGrupoBtn" class="btn-crear">Crear Grupo</button>
 
-
-    <!-- Modal para crear grupo -->
     <div id="modalGrupo" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
             <h2>Crear Grupo</h2>
-
             <form id="formCrearGrupo" method="post">
                 {% csrf_token %}
                 <label>Nombre del Grupo:</label>
-                <input type="text" name="nombre" required>  <!-- Asegúrate de que sea "nombre" -->
+                <input type="text" name="nombre" required>
                 <button type="submit">Guardar</button>
             </form>
-            
-
         </div>
     </div>
-    
 
-    <!-- Tabla para visualizar los grupos -->
     <table id="gruposTable">
         <thead>
             <tr>
@@ -53,98 +50,69 @@
                 <th>Nombre del Grupo</th>
             </tr>
         </thead>
-        <tbody id="gruposBody"> <!-- ID correcto para actualización dinámica -->
-            {% for grupo in grupos %}  
+        <tbody id="gruposBody">
+            {% for grupo in grupos %}
             <tr>
-                <td>{{ grupo.id }}</td>  <!-- ✅ Mostrar ID del grupo -->
-                <td>{{ grupo.nombre }}</td>  <!-- ✅ Mostrar Nombre del grupo -->
+                <td>{{ grupo.id }}</td>
+                <td>{{ grupo.nombre }}</td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="2">No hay grupos registrados.</td>  <!-- ✅ Mensaje si no hay datos -->
+                <td colspan="2">No hay grupos registrados.</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-    
 
+    <div class="volver-inicio">
+        <a href="{% url 'home' %}">⬅ Volver al Inicio</a>
+    </div>
 
     <script>
-       
         $(document).ready(function () {
-    console.log("✅ Script cargado correctamente");
-
-    // ✅ Cargar lista de grupos al inicio
-    function cargarGrupos() {
-        $.get("/grupos/obtener/", function (response) {  // ✅ Llamar a la nueva API
-            console.log("✅ Datos recibidos:", response);
-            let tbody = $("#gruposBody");
-            tbody.empty();  // 🔥 Limpiar la tabla antes de actualizar
-
-            if (response.grupos.length > 0) {
-                response.grupos.forEach(function (grupo) {
-                    tbody.append(`
-                        <tr>
-                            <td>${grupo.id}</td>
-                            <td>${grupo.nombre}</td>
-                        </tr>
-                    `);
+            function cargarGrupos() {
+                $.get("/grupos/obtener/", function (response) {
+                    let tbody = $("#gruposBody");
+                    tbody.empty();
+                    if (response.grupos.length > 0) {
+                        response.grupos.forEach(function (grupo) {
+                            tbody.append(`<tr><td>${grupo.id}</td><td>${grupo.nombre}</td></tr>`);
+                        });
+                    } else {
+                        tbody.append(`<tr><td colspan="2">No hay grupos registrados.</td></tr>`);
+                    }
                 });
-            } else {
-                tbody.append(`<tr><td colspan="2">No hay grupos registrados.</td></tr>`);
             }
-        }).fail(function (xhr) {
-            console.error("❌ Error al cargar grupos:", xhr.responseText);
-        });
-    }
 
+            cargarGrupos();
 
-    // ✅ Cargar grupos al inicio
-    cargarGrupos();
+            $("#crearGrupoBtn").click(function () {
+                $("#modalGrupo").fadeIn();
+            });
 
-    // ✅ Abrir y cerrar modal
-    $("#crearGrupoBtn").click(function () {
-        console.log("✅ Botón Crear Grupo clickeado");
-        $("#modalGrupo").fadeIn();
-    });
-
-    $(".close").click(function () {
-        console.log("✅ Modal cerrado");
-        $("#modalGrupo").fadeOut();
-    });
-
-    // ✅ Enviar formulario de creación de grupo
-    $("#formCrearGrupo").submit(function (event) {
-        event.preventDefault();
-
-        let data = {
-            nombre: $("input[name=nombre]").val(),
-            csrfmiddlewaretoken: $("input[name=csrfmiddlewaretoken]").val()
-        };
-
-        $.post("/grupos/crear/", data, function (response) {
-            console.log("✅ Grupo creado:", response);
-
-            if (response.success) {
-                alert("✅ Grupo creado con éxito");
+            $(".close").click(function () {
                 $("#modalGrupo").fadeOut();
-                $("input[name=nombre]").val("");  // ✅ Limpiar campo
-                cargarGrupos();  // 🔥 Recargar los datos después de crear
-            } else {
-                alert("❌ Error: " + response.error);
-            }
-        }).fail(function (xhr) {
-            console.error("❌ Error en la petición:", xhr.responseText);
-            alert("❌ Error al crear el grupo");
-        });
-    });
-});
-        
-        
+            });
 
+            $("#formCrearGrupo").submit(function (event) {
+                event.preventDefault();
+                let data = {
+                    nombre: $("input[name=nombre]").val(),
+                    csrfmiddlewaretoken: $("input[name=csrfmiddlewaretoken]").val()
+                };
+                $.post("/grupos/crear/", data, function (response) {
+                    if (response.success) {
+                        alert("✅ Grupo creado con éxito");
+                        $("#modalGrupo").fadeOut();
+                        $("input[name=nombre]").val("");
+                        cargarGrupos();
+                    } else {
+                        alert("❌ Error: " + response.error);
+                    }
+                });
+            });
+        });
     </script>
-        
-        
-        <a href="{% url 'home' %}">Volver al Inicio</a>
 </body>
 </html>
+

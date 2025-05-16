@@ -5,16 +5,26 @@
     <title>Asistencia</title>
     
     {% load static %}  <!-- 🔹 IMPORTANTE: Cargar archivos estáticos -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/configuracion.css' %}">
 </head>
 <body>
 
     <!-- Encabezado con el Logo -->
+    {% load static %}
     <header>
         <img src="{% static 'img/logo.png' %}" alt="Logo" class="header-img">
-    </header>
 
-    <h1>Cofiguracion</h1>
+    <div class="grid-container">
+        <a href="{% url 'turnos' %}" class="box {% if request.path == '/turnos/' %}activo{% endif %}">Turnos</a>
+        <a href="{% url 'empleados' %}" class="box {% if request.path == '/empleados/' %}activo{% endif %}">Empleados</a>
+        <a href="{% url 'grupos' %}" class="box {% if request.path == '/grupos/' %}activo{% endif %}">Grupos</a>
+        <a href="{% url 'reportes' %}" class="box {% if request.path == '/reportes/' %}activo{% endif %}">Reportes</a>
+        <a href="{% url 'configuracion' %}" class="box {% if request.path == '/configuracion/' %}activo{% endif %}">Configuraciones</a>
+    </div>
+    </header>
+    
+
+    <h1 class="titulo-configuracion">Cofiguración</h1>
     <a href="{% url 'home' %}">Volver al Inicio</a>
 
 </body>
