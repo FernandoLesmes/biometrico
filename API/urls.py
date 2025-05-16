@@ -24,7 +24,7 @@ urlpatterns = [
     path("turnos/", views.lista_turnos, name="turnos"),
     path("turnos/crear/", views.crear_turno, name="crear_turno"),
     path("turnos/editar/<int:id>/", views.editar_turno, name="editar_turno"),
-    path("turnos/eliminar/<int:id>/", views.eliminar_turno, name="eliminar_turno"),
+    #path("turnos/eliminar/<int:id>/", views.eliminar_turno, name="eliminar_turno"),
     #grupos
     path("grupos/", lista_grupos, name="grupos"),
     path("grupos/crear/", crear_grupo, name="crear_grupo"),
@@ -45,6 +45,12 @@ urlpatterns = [
     #reportes de horas extras
     path('reportes/horas_extras', views.reporte_horas_extras, name='reporte_horas_extras'),
     path('procesar-marcaciones/', ejecutar_procesamiento, name='procesar_marcaciones'),
+
+   
+    path("turnos/cambiar_estado/", views.cambiar_estado_turno, name="cambiar_estado_turno"),
+    
+
+    
 
    
 

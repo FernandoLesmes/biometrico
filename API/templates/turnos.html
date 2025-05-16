@@ -1,39 +1,39 @@
 <!DOCTYPE html>
 <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <title>Turnos</title>
-    
-        {% load static %}
-        <link rel="stylesheet" href="{% static 'css/turnos.css' %}">
-        <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
-        
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    </head>
-<body>
-    <!-- Imagen de encabezado -->
+<head>
+    <meta charset="UTF-8">
+    <title>Turnos</title>
+
     {% load static %}
+    <link rel="stylesheet" href="{% static 'css/turnos.css' %}">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+
+    <meta name="csrf-token" content="{{ csrf_token }}">
+</head>
+
+<body>
+    <!-- ✅ ENCABEZADO -->
     <header>
         <img src="{% static 'img/logo.png' %}" alt="Logo" class="header-img">
 
-    <div class="grid-container">
-        <a href="{% url 'turnos' %}" class="box {% if request.path == '/turnos/' %}activo{% endif %}">Turnos</a>
-        <a href="{% url 'empleados' %}" class="box {% if request.path == '/empleados/' %}activo{% endif %}">Empleados</a>
-        <a href="{% url 'grupos' %}" class="box {% if request.path == '/grupos/' %}activo{% endif %}">Grupos</a>
-        <a href="{% url 'reportes' %}" class="box {% if request.path == '/reportes/' %}activo{% endif %}">Reportes</a>
-        <a href="{% url 'configuracion' %}" class="box {% if request.path == '/configuracion/' %}activo{% endif %}">Configuraciones</a>
-    </div>
+        <div class="grid-container">
+            <a href="{% url 'turnos' %}" class="box {% if request.path == '/turnos/' %}activo{% endif %}">Turnos</a>
+            <a href="{% url 'empleados' %}" class="box {% if request.path == '/empleados/' %}activo{% endif %}">Empleados</a>
+            <a href="{% url 'grupos' %}" class="box {% if request.path == '/grupos/' %}activo{% endif %}">Grupos</a>
+            <a href="{% url 'reportes' %}" class="box {% if request.path == '/reportes/' %}activo{% endif %}">Reportes</a>
+            <a href="{% url 'configuracion' %}" class="box {% if request.path == '/configuracion/' %}activo{% endif %}">Configuraciones</a>
+        </div>
     </header>
-    
+
     <h1 class="titulo-turnos">Gestión de turnos</h1>
-
-
 
     <button id="abrirModal">Crear Nuevo Turno</button>
 
+    <!-- ✅ TABLA -->
     <table id="turnosTable" border="1">
-        
         <thead>
             <tr>
                 <th>ID</th>
@@ -54,76 +54,90 @@
             {% for turno in turnos %}
             <tr>
                 <td>{{ turno.id }}</td>
-                <td>{{ turno.shift_name }}</td>
-                <td>{{ turno.start_time }}</td>
-                <td>{{ turno.max_entry_time }}</td>
-                <td>{{ turno.end_time }}</td>
-                <td>{{ turno.work_hours }}</td>
-                <td>{{ turno.break_type }}</td>
-                <td>{{ turno.break_minutes }}</td>
-                <td>{{ turno.break_start }}</td>
-                <td>{{ turno.break_end }}</td>
-                <td>{{ turno.status }}</td>
+                <td>{{ turno.shift_name|default:"-" }}</td>
+                <td>{{ turno.start_time|default:"-" }}</td>
+                <td>{{ turno.max_entry_time|default:"-" }}</td>
+                <td>{{ turno.end_time|default:"-" }}</td>
+                <td>{{ turno.work_hours|default:"-" }}</td>
+                <td>{{ turno.break_type|default:"-" }}</td>
+                <td>{{ turno.break_minutes|default:"-" }}</td>
+                <td>{{ turno.break_start|default:"-" }}</td>
+                <td>{{ turno.break_end|default:"-" }}</td>
                 <td>
-                    <button class="editar">Editar</button>
-                    <button class="eliminar">Activar</button>
-                    <button class="eliminar">Inactivo</button>
+                    <select class="cambiar-estado {{ turno.status|lower }}" data-id="{{ turno.id }}">
+                        <option value="Activo" {% if turno.status == 'Activo' %}selected{% endif %}>Activo</option>
+                        <option value="Inactivo" {% if turno.status == 'Inactivo' %}selected{% endif %}>Inactivo</option>
+                    </select>
+                </td>
+                <td>
+                    <button class="editar" data-id="{{ turno.id }}">✏️ Editar</button>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <!-- 🌟 MODAL PARA CREAR TURNO -->
-    <!-- 🌟 MODAL PARA CREAR TURNO -->
-<div id="modalTurno" class="modal">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>Agregar Nuevo Turno</h2>
-        <form id="crearTurnoForm">
-            <label for="nombre">Nombre del Turno:</label>
-            <input type="text" id="nombre" required>
+    <!-- ✅ MODAL -->
+    <div id="modalTurno" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Agregar Nuevo Turno</h2>
+            <form id="crearTurnoForm">
+                <label for="nombre">Nombre del Turno:</label>
+                <input type="text" id="nombre" required>
 
-            <label for="entrada">Hora de Entrada:</label>
-            <input type="time" id="entrada" required>
+                <label for="entrada">Hora de Entrada:</label>
+                <input type="time" id="entrada" required>
 
-            <label for="max_entrada">Hora Máxima de Entrada:</label>
-            <input type="time" id="max_entrada" required>
+                <label for="max_entrada">Hora Máxima de Entrada:</label>
+                <input type="time" id="max_entrada" required>
 
-            <label for="salida">Hora de Salida:</label>
-            <input type="time" id="salida" required>
+                <label for="salida">Hora de Salida:</label>
+                <input type="time" id="salida" required>
 
-            <label for="horas">Horas de Trabajo:</label>
-            <input type="number" id="horas" placeholder="Horas Trabajo" required>
+                <label for="horas">Horas de Trabajo:</label>
+                <input type="number" id="horas" required>
 
-            <label for="descanso">Tipo de Descanso:</label>
-            <select id="descanso">
-                <option value="Sin descanso">Sin descanso</option>
-                <option value="Descanso libre">Descanso libre</option>
-            </select>
+                <label for="descanso">Tipo de Descanso:</label>
+                <select id="descanso">
+                    <option value="Sin descanso">Sin descanso</option>
+                    <option value="Descanso libre">Descanso libre</option>
+                </select>
 
-            <label for="minutos_descanso">Minutos de Descanso:</label>
-            <input type="number" id="minutos_descanso" placeholder="Minutos Descanso">
+                <label for="minutos_descanso">Minutos de Descanso:</label>
+                <input type="number" id="minutos_descanso">
 
-            <label for="inicio_descanso">Inicio del Descanso:</label>
-            <input type="time" id="inicio_descanso">
+                <label for="inicio_descanso">Inicio del Descanso:</label>
+                <input type="time" id="inicio_descanso">
 
-            <label for="fin_descanso">Fin del Descanso:</label>
-            <input type="time" id="fin_descanso">
+                <label for="fin_descanso">Fin del Descanso:</label>
+                <input type="time" id="fin_descanso">
 
-            <label for="estado">Estado:</label>
-            <select id="estado">
-                <option value="Activo">Activo</option>
-                <option value="Inactivo">Inactivo</option>
-            </select>
+                <label for="estado">Estado:</label>
+                <select id="estado">
+                    <option value="Activo">Activo</option>
+                    <option value="Inactivo">Inactivo</option>
+                </select>
 
-            <button type="submit">Guardar Turno</button>
-        </form>
+                <button type="submit">Guardar Turno</button>
+            </form>
+        </div>
     </div>
-</div>
+
+    <!-- ✅ VOLVER -->
+    <div class="volver-inicio">
+        <a href="{% url 'home' %}">⬅ Volver al Inicio</a>
+    </div>
+
+    <!-- ✅ SCRIPTS -->
+    <script src="{% static 'js/mostrar_turnos.js' %}"></script>
+    <script src="{% static 'js/crear_turno.js' %}"></script>
+</body>
+</html>
 
 
 
+<!--
 <script>
     $(document).ready(function () {
         $("#turnosTable").DataTable({
@@ -135,7 +149,7 @@
                 infoFiltered: "",
                 paginate: {
                     previous: "",
-                    next: ""
+                    next: "" 
                 }
             }
         });
@@ -173,12 +187,21 @@
 
             console.log("🔍 Datos a enviar:", data);
 
+            if (!data.break_start) data.break_start = "00:00";
+            if (!data.break_end) data.break_end = "00:00";
+
+
+
+
+
             $.post("/turnos/crear/", data, function (response) {
                 console.log("✅ Respuesta del servidor:", response);
                 alert("✅ Turno creado con éxito");
-
+            
                 $("#modalTurno").fadeOut();
-
+                $("#crearTurnoForm")[0].reset();
+            
+                // ✅ Agregar el nuevo turno a la tabla manualmente
                 $("#turnosTable tbody").append(`
                     <tr>
                         <td>${response.id}</td>
@@ -191,25 +214,168 @@
                         <td>${response.break_minutes}</td>
                         <td>${response.break_start}</td>
                         <td>${response.break_end}</td>
-                        <td>${response.status}</td>
-                        <td><button class="editar">Editar</button> | <button class="eliminar">Eliminar</button></td>
+                        <td>
+                            <select class="cambiar-estado ${response.status.toLowerCase()}" data-id="${response.id}">
+                                <option value="Activo" ${response.status === 'Activo' ? 'selected' : ''}>Activo</option>
+                                <option value="Inactivo" ${response.status === 'Inactivo' ? 'selected' : ''}>Inactivo</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button class="editar" data-id="${response.id}">✏️ Editar</button>
+                        </td>
                     </tr>
                 `);
-
-                $("#crearTurnoForm")[0].reset();
+            
             }).fail(function (error) {
                 console.log("❌ Error en la petición:", error.responseText);
                 alert("❌ Error al crear el turno");
             });
         });
+    })
+    
+</script>
+
+-->
+
+<script>
+    $(document).ready(function () {
+        let creando = false;
+    
+        $("#abrirModal").click(function () {
+            $("#modalTurno").fadeIn();
+        });
+    
+        $(".close").click(function () {
+            $("#modalTurno").fadeOut();
+        });
+    
+        $("#crearTurnoForm").off("submit").on("submit", function (event) {
+            event.preventDefault();
+    
+            if (creando) return; // 🧠 Bloquea si ya se está enviando
+            creando = true;
+    
+            const csrfToken = $("meta[name='csrf-token']").attr("content");
+    
+            const data = {
+                shift_name: $("#nombre").val(),
+                start_time: $("#entrada").val(),
+                max_entry_time: $("#max_entrada").val(),
+                end_time: $("#salida").val(),
+                work_hours: $("#horas").val(),
+                break_type: $("#descanso").val(),
+                break_minutes: $("#minutos_descanso").val(),
+                break_start: $("#inicio_descanso").val() || "00:00",
+                break_end: $("#fin_descanso").val() || "00:00",
+                status: $("#estado").val(),
+                csrfmiddlewaretoken: csrfToken
+            };
+    
+            $.post("/turnos/crear/", data, function (response) {
+                creando = false;
+    
+                if (response.success) {
+                    $("#modalTurno").fadeOut();
+                    $("#crearTurnoForm")[0].reset();
+    
+                    const tabla = $('#turnosTable').DataTable();
+                    tabla.row.add([
+                        response.id,
+                        response.shift_name,
+                        response.start_time,
+                        response.max_entry_time,
+                        response.end_time,
+                        response.work_hours,
+                        response.break_type,
+                        response.break_minutes,
+                        response.break_start,
+                        response.break_end,
+                        `<select class="cambiar-estado ${response.status.toLowerCase()}" data-id="${response.id}">
+                            <option value="Activo" ${response.status === 'Activo' ? 'selected' : ''}>Activo</option>
+                            <option value="Inactivo" ${response.status === 'Inactivo' ? 'selected' : ''}>Inactivo</option>
+                        </select>`,
+                        `<button class="editar" data-id="${response.id}">✏️ Editar</button>`
+                    ]).draw(false);
+    
+                    // ✅ Color visual
+                    $(`select[data-id="${response.id}"]`).addClass(response.status.toLowerCase());
+    
+                    // ✅ Notificación suave
+                    Toastify({
+                        text: "✅ Turno creado con éxito",
+                        duration: 3000,
+                        gravity: "top",
+                        position: "center",
+                        backgroundColor: "#4CAF50",
+                    }).showToast();
+    
+                } else {
+                    alert("❌ Error del servidor.");
+                }
+    
+            }).fail(function (error) {
+                creando = false;
+                alert("❌ Error técnico.");
+                console.log("Error:", error.responseText);
+            });
+        });
     });
+    
+    </script>
+    
+
+
+<script>
+
+
+
+
+    $(document).on('change', '.cambiar-estado', function () {
+        let select = $(this);
+        let turnoId = select.data("id");
+        let nuevoEstado = select.val();
+
+        const csrfToken = $('meta[name="csrf-token"]').attr('content');
+
+        $.post("/turnos/cambiar_estado/", {
+            id: turnoId,
+            estado: nuevoEstado,
+            csrfmiddlewaretoken: "{{ csrf_token }}"
+        }).done(function () {
+            alert("✅ Estado actualizado correctamente");
+        }).fail(function () {
+            alert("❌ Error al actualizar el estado");
+        });
+    });
+
+
+
+
+   
+        $(document).ready(function () {
+            // ✅ Al cargar: aplicar la clase correcta a cada <select>
+            $(".cambiar-estado").each(function () {
+                const val = $(this).val().toLowerCase();
+                $(this).addClass(val);
+            });
+    
+            // ✅ Al cambiar el valor del <select>
+            $(".cambiar-estado").on("change", function () {
+                const select = $(this);
+                const nuevoEstado = select.val().toLowerCase(); // 'activo' o 'inactivo'
+    
+                // Limpiar clases antiguas y aplicar nueva
+                select.removeClass("activo inactivo").addClass(nuevoEstado);
+            });
+        });
+    
+    
+    
+
+
 </script>
 
 
-
-<div class="volver-inicio">
-    <a href="{% url 'home' %}">⬅ Volver al Inicio</a>
-</div>
 
 
 </body>

@@ -23,6 +23,11 @@ from datetime import datetime
 from django.utils.timezone import make_aware
 from django.shortcuts import redirect
 
+from django.http import JsonResponse
+from .models import AttShift
+from django.views.decorators.csrf import csrf_exempt
+
+
 # ================== VISTAS GENERALES ==================
 def home(request):
     return render(request, 'home.html')
@@ -50,11 +55,13 @@ def logout_view(request):
     return redirect('login')
 
 # ================== TURNOS ==================
-def turnos_view(request):
-    return render(request, 'turnos.html')
+#def turnos_view(request):
+    #turnos = AttShift.objects.all().order_by('id')  # o .order_by('start_time') si prefieres por hora
+    #return render(request, 'turnos.html', {'turnos': turnos})
 
 def lista_turnos(request):
-    turnos = AttShift.objects.all()
+    turnos = AttShift.objects.all().order_by('id')
+    
     return render(request, 'turnos.html', {'turnos': turnos})
 
 def crear_turno(request):
@@ -77,12 +84,45 @@ def editar_turno(request, id):
         return JsonResponse({"success": False, "error": form.errors}, status=400)
     return render(request, "dj/editar_turno.html", {"form": ShiftForm(instance=turno), "turno": turno})
 
-def eliminar_turno(request, id):
-    turno = get_object_or_404(AttShift, id=id)
+
+
+
+
+
+
+
+
+
+def cambiar_estado_turno(request):
     if request.method == "POST":
-        turno.delete()
-        return JsonResponse({"success": True})
-    return JsonResponse({"success": False, "error": "Método no permitido"}, status=400)
+        turno_id = request.POST.get("id")
+        nuevo_estado = request.POST.get("estado")
+        
+        print("🛠 CAMBIO RECIBIDO")
+        print(f"➡️ ID: {turno_id}")
+        print(f"➡️ ESTADO: {nuevo_estado}")
+        
+        
+        
+        try:
+            turno = AttShift.objects.get(id=turno_id)
+            print(f"✅ Turno encontrado: {turno.shift_name}")
+            turno.status = nuevo_estado
+            turno.save()
+            print(f"💾 Guardado: {turno.status}")
+            return JsonResponse({"success": True})
+        except AttShift.DoesNotExist:
+            print("❌ Turno no encontrado")
+            return JsonResponse({"success": False, "error": "Turno no encontrado"})
+    print("❌ Método no permitido")    
+    return JsonResponse({"success": False, "error": "Método no permitido"})
+
+    
+
+
+
+
+
 
 # ================== GRUPOS ==================
 def crear_grupo(request):
