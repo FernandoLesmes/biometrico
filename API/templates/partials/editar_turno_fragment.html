@@ -1,0 +1,16 @@
+<input type="text" id="id_shift_name" value="{{ form.shift_name.value }}">
+<input type="time" id="id_start_time" value="{{ form.start_time.value }}">
+<input type="time" id="id_max_entry_time" value="{{ form.max_entry_time.value }}">
+<input type="time" id="id_end_time" value="{{ form.end_time.value }}">
+<input type="number" id="id_work_hours" value="{{ form.work_hours.value }}">
+<select id="id_break_type">
+    <option value="Sin descanso" {% if form.break_type.value == "Sin descanso" %}selected{% endif %}>Sin descanso</option>
+    <option value="Descanso libre" {% if form.break_type.value == "Descanso libre" %}selected{% endif %}>Descanso libre</option>
+</select>
+<input type="number" id="id_break_minutes" value="{{ form.break_minutes.value }}">
+<input type="time" id="id_break_start" value="{{ form.break_start.value }}">
+<input type="time" id="id_break_end" value="{{ form.break_end.value }}">
+<select id="id_status">
+    <option value="Activo" {% if form.status.value == "Activo" %}selected{% endif %}>Activo</option>
+    <option value="Inactivo" {% if form.status.value == "Inactivo" %}selected{% endif %}>Inactivo</option>
+</select>

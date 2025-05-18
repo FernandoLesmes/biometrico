@@ -244,6 +244,19 @@ def procesar_marcaciones(fecha_inicio, fecha_fin):
             fecha = salida.date()  # Turno 3 cruza de día, la fecha debe ser la de salida
             festivo = es_festivo(fecha)
             turno = detectar_turno(entrada.time(), salida.time(), grupo)
+            
+            
+            #aca es parta no asigana rturno si este esat inactivo
+            
+            if not turno:
+                continue  # si no se detectó ningún turno
+
+                    # Validar si el turno está activo en la base de datos
+            turno_db = AttShift.objects.filter(shift_name=turno["nombre"], status="Activo").first()
+            if not turno_db:
+                continue  # ❌ no se asigna turno si está inactivo
+
+            
 
             if turno and turno["nombre"] == "Turno 3":
                 fechas_turno_3.add(fecha)
@@ -263,7 +276,8 @@ def procesar_marcaciones(fecha_inicio, fecha_fin):
                     empleado=empleado,
                     fecha=fecha,
                     defaults={
-                        "turno": AttShift.objects.get(shift_name="Turno 3"),
+                        "turno": turno_db, # aca se replazo la linea "turno": AttShift.objects.get(shift_name="Turno 3"), por la q esta ahora  lo mismo par alos demas 
+ 
                         "hora_entrada": entrada,
                         "hora_salida": salida,
                         "festivo": festivo,
@@ -312,7 +326,7 @@ def procesar_marcaciones(fecha_inicio, fecha_fin):
                     empleado=empleado,
                     fecha=fecha,
                     defaults={
-                        "turno": AttShift.objects.get(shift_name="Turno 1"),
+                        "turno": turno_db,
                         "hora_entrada": entrada,
                         "hora_salida": salida,
                         "festivo": festivo,
@@ -339,7 +353,7 @@ def procesar_marcaciones(fecha_inicio, fecha_fin):
                     empleado=empleado,
                     fecha=fecha,
                     defaults={
-                        "turno": AttShift.objects.get(shift_name="Turno 2"),
+                        "turno": turno_db,
                         "hora_entrada": entrada,
                         "hora_salida": salida,
                         "festivo": festivo,
@@ -359,7 +373,7 @@ def procesar_marcaciones(fecha_inicio, fecha_fin):
                     empleado=empleado,
                     fecha=fecha,
                     defaults={
-                        "turno": AttShift.objects.get(shift_name=nombre_turno),
+                        "turno": turno_db,
                         "hora_entrada": entrada,
                         "hora_salida": salida,
                         "festivo": festivo,

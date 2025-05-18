@@ -1,4 +1,6 @@
 from datetime import datetime, time, timedelta
+from API.models import AttShift
+
 
 TURNOS = {
     1: {
@@ -235,13 +237,19 @@ TURNOS = {
 def detectar_turno(entrada, salida, grupo_nombre=None):
     entrada_time = entrada.time() if isinstance(entrada, datetime) else entrada
     salida_time = salida.time() if isinstance(salida, datetime) else salida
-
     grupo_nombre = grupo_nombre.lower() if grupo_nombre else ""
 
     for turno in TURNOS.values():
         entrada_min = turno['hora_entrada_min']
         entrada_max = turno['hora_entrada_max']
         salida_turno = turno['hora_salida']
+        
+        try:
+            turno_db = AttShift.objects.get(shift_name=turno["nombre"])
+            if turno_db.status != "Activo":
+                continue  # ⚠️ Si está inactivo, no considerar este turno
+        except AttShift.DoesNotExist:
+            continue
 
         if grupo_nombre == "administradores" and turno.get("nombre") == "Turno 8":
             return turno

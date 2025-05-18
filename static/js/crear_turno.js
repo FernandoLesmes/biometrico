@@ -1,5 +1,5 @@
 $(document).ready(function () {
-    $("#crearTurnoForm").submit(function (event) {
+    /*$("#crearTurnoForm").submit(function (event) {
         event.preventDefault();
 
         const csrfToken = $("meta[name='csrf-token']").attr("content");
@@ -55,4 +55,4 @@ $(document).ready(function () {
             console.log("❌ Error:", error.responseText);
         });
     });
-});
+});*/

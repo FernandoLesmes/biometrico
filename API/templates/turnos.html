@@ -132,6 +132,7 @@
     <!-- ✅ SCRIPTS -->
     <script src="{% static 'js/mostrar_turnos.js' %}"></script>
     <script src="{% static 'js/crear_turno.js' %}"></script>
+    <script src="{% static 'js/editar_turno.js' %}"></script>
 </body>
 </html>
 
@@ -242,84 +243,102 @@
         let creando = false;
     
         $("#abrirModal").click(function () {
+            // ✅ Cambiar el título del modal
+            $(".modal-content h2").text("Agregar Nuevo Turno");
+    
+            // ✅ Limpiar campos del formulario
+            $("#crearTurnoForm")[0].reset();
+            $("#nombre").val("");
+            $("#entrada").val("");
+            $("#max_entrada").val("");
+            $("#salida").val("");
+            $("#horas").val("");
+            $("#descanso").val("Sin descanso");
+            $("#minutos_descanso").val("");
+            $("#inicio_descanso").val("");
+            $("#fin_descanso").val("");
+            $("#estado").val("Activo");
+    
+            // ✅ Eliminar comportamiento previo (edición)
+            $("#crearTurnoForm").off("submit");
+    
+            // ✅ Volver a vincular el submit para CREAR
+            $("#crearTurnoForm").on("submit", function (event) {
+                event.preventDefault();
+    
+                if (creando) return;
+                creando = true;
+    
+                const csrfToken = $("meta[name='csrf-token']").attr("content");
+    
+                const data = {
+                    shift_name: $("#nombre").val(),
+                    start_time: $("#entrada").val(),
+                    max_entry_time: $("#max_entrada").val(),
+                    end_time: $("#salida").val(),
+                    work_hours: $("#horas").val(),
+                    break_type: $("#descanso").val(),
+                    break_minutes: $("#minutos_descanso").val(),
+                    break_start: $("#inicio_descanso").val() || "00:00",
+                    break_end: $("#fin_descanso").val() || "00:00",
+                    status: $("#estado").val(),
+                    csrfmiddlewaretoken: csrfToken
+                };
+    
+                $.post("/turnos/crear/", data, function (response) {
+                    creando = false;
+    
+                    if (response.success) {
+                        $("#modalTurno").fadeOut();
+                        $("#crearTurnoForm")[0].reset();
+    
+                        const tabla = $('#turnosTable').DataTable();
+                        tabla.row.add([
+                            response.id,
+                            response.shift_name,
+                            response.start_time,
+                            response.max_entry_time,
+                            response.end_time,
+                            response.work_hours,
+                            response.break_type,
+                            response.break_minutes,
+                            response.break_start,
+                            response.break_end,
+                            `<select class="cambiar-estado ${response.status.toLowerCase()}" data-id="${response.id}">
+                                <option value="Activo" ${response.status === 'Activo' ? 'selected' : ''}>Activo</option>
+                                <option value="Inactivo" ${response.status === 'Inactivo' ? 'selected' : ''}>Inactivo</option>
+                            </select>`,
+                            `<button class="editar" data-id="${response.id}">✏️ Editar</button>`
+                        ]).draw(false);
+    
+                        $(`select[data-id="${response.id}"]`).addClass(response.status.toLowerCase());
+    
+                        Toastify({
+                            text: "✅ Turno creado con éxito",
+                            duration: 3000,
+                            gravity: "top",
+                            position: "center",
+                            backgroundColor: "#4CAF50",
+                        }).showToast();
+                    } else {
+                        alert("❌ Error del servidor.");
+                    }
+                }).fail(function (error) {
+                    creando = false;
+                    alert("❌ Error técnico.");
+                    console.log("Error:", error.responseText);
+                });
+            });
+    
+            // ✅ Finalmente, mostrar el modal
             $("#modalTurno").fadeIn();
         });
     
         $(".close").click(function () {
             $("#modalTurno").fadeOut();
         });
-    
-        $("#crearTurnoForm").off("submit").on("submit", function (event) {
-            event.preventDefault();
-    
-            if (creando) return; // 🧠 Bloquea si ya se está enviando
-            creando = true;
-    
-            const csrfToken = $("meta[name='csrf-token']").attr("content");
-    
-            const data = {
-                shift_name: $("#nombre").val(),
-                start_time: $("#entrada").val(),
-                max_entry_time: $("#max_entrada").val(),
-                end_time: $("#salida").val(),
-                work_hours: $("#horas").val(),
-                break_type: $("#descanso").val(),
-                break_minutes: $("#minutos_descanso").val(),
-                break_start: $("#inicio_descanso").val() || "00:00",
-                break_end: $("#fin_descanso").val() || "00:00",
-                status: $("#estado").val(),
-                csrfmiddlewaretoken: csrfToken
-            };
-    
-            $.post("/turnos/crear/", data, function (response) {
-                creando = false;
-    
-                if (response.success) {
-                    $("#modalTurno").fadeOut();
-                    $("#crearTurnoForm")[0].reset();
-    
-                    const tabla = $('#turnosTable').DataTable();
-                    tabla.row.add([
-                        response.id,
-                        response.shift_name,
-                        response.start_time,
-                        response.max_entry_time,
-                        response.end_time,
-                        response.work_hours,
-                        response.break_type,
-                        response.break_minutes,
-                        response.break_start,
-                        response.break_end,
-                        `<select class="cambiar-estado ${response.status.toLowerCase()}" data-id="${response.id}">
-                            <option value="Activo" ${response.status === 'Activo' ? 'selected' : ''}>Activo</option>
-                            <option value="Inactivo" ${response.status === 'Inactivo' ? 'selected' : ''}>Inactivo</option>
-                        </select>`,
-                        `<button class="editar" data-id="${response.id}">✏️ Editar</button>`
-                    ]).draw(false);
-    
-                    // ✅ Color visual
-                    $(`select[data-id="${response.id}"]`).addClass(response.status.toLowerCase());
-    
-                    // ✅ Notificación suave
-                    Toastify({
-                        text: "✅ Turno creado con éxito",
-                        duration: 3000,
-                        gravity: "top",
-                        position: "center",
-                        backgroundColor: "#4CAF50",
-                    }).showToast();
-    
-                } else {
-                    alert("❌ Error del servidor.");
-                }
-    
-            }).fail(function (error) {
-                creando = false;
-                alert("❌ Error técnico.");
-                console.log("Error:", error.responseText);
-            });
-        });
     });
+    
     
     </script>
     

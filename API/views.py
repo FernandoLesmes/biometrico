@@ -27,6 +27,8 @@ from django.http import JsonResponse
 from .models import AttShift
 from django.views.decorators.csrf import csrf_exempt
 
+from django.http import JsonResponse
+from .models import AttShift
 
 # ================== VISTAS GENERALES ==================
 def home(request):
@@ -74,15 +76,32 @@ def crear_turno(request):
         return JsonResponse({"success": True, "id": nuevo_turno.id, **{k: str(getattr(nuevo_turno, k)) for k in data}})
     return JsonResponse({"success": False, "error": "Método no permitido"}, status=400)
 
+
+
 def editar_turno(request, id):
     turno = get_object_or_404(AttShift, id=id)
-    if request.method == "POST":
+    
+    if request.method == "GET":
+        return JsonResponse({
+            "id": turno.id,
+            "shift_name": turno.shift_name,
+            "start_time": turno.start_time.strftime('%H:%M'),
+            "max_entry_time": turno.max_entry_time.strftime('%H:%M'),
+            "end_time": turno.end_time.strftime('%H:%M'),
+            "work_hours": turno.work_hours,
+            "break_type": turno.break_type,
+            "break_minutes": turno.break_minutes,
+            "break_start": turno.break_start.strftime('%H:%M') if turno.break_start else "00:00",
+            "break_end": turno.break_end.strftime('%H:%M') if turno.break_end else "00:00",
+            "status": turno.status
+        })
+
+    elif request.method == "POST":
         form = ShiftForm(request.POST, instance=turno)
         if form.is_valid():
             form.save()
             return JsonResponse({"success": True})
         return JsonResponse({"success": False, "error": form.errors}, status=400)
-    return render(request, "dj/editar_turno.html", {"form": ShiftForm(instance=turno), "turno": turno})
 
 
 
