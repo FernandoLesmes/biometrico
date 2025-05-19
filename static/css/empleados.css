@@ -239,3 +239,26 @@ h1.titulo-empleados {
     background-color: #f9f9f9;
 }
 
+
+
+
+/*botones de editar y eliminar */
+
+
+
+/* Estado Activo */
+select.cambiar-estado.activo {
+    background-color: #d4edda;
+    border: 1px solid #28a745;
+    color: #155724;
+    font-weight: bold;
+}
+
+/* Estado Inactivo */
+select.cambiar-estado.inactivo {
+    background-color: #f8d7da;
+    border: 1px solid #dc3545;
+    color: #721c24;
+    font-weight: bold;
+}
+

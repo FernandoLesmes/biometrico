@@ -40,7 +40,10 @@ def generar_reporte_basico(filtros):
 
     
     if filtros.get("grupo"):
-        punches = punches.filter(employee__emp_group__nombre__icontains=filtros["grupo"])  
+        punches = punches.filter(employee__emp_group__nombre__icontains=filtros["grupo"]) 
+         
+    punches = punches.filter(employee__emp_active=True)
+    
 
     if filtros.get('desde'):
         punches = punches.filter(punch_time__date__gte=filtros['desde'])
@@ -92,6 +95,9 @@ def reporte_horas_extras(filtros):
 
     if filtros.get('grupo'):
         registros = registros.filter(empleado__emp_group__nombre__icontains=filtros['grupo'])
+        
+    registros = registros.filter(empleado__emp_active=True)
+
 
     if filtros.get('desde'):
         registros = registros.filter(fecha__gte=filtros['desde'])
@@ -221,7 +227,8 @@ def procesar_marcaciones(fecha_inicio, fecha_fin):
     fecha_fin = ultimo_punch.date()
     
     print(f"📅 Procesando desde {fecha_inicio} hasta {fecha_fin}")
-    empleados = HrEmployee.objects.all()
+    empleados = HrEmployee.objects.filter(emp_active=True)
+
 
     for empleado in empleados:
         grupo = getattr(empleado.emp_group, 'nombre', '').lower()
@@ -322,6 +329,11 @@ def procesar_marcaciones(fecha_inicio, fecha_fin):
             horas_extra_total = max(0, horas_trabajadas - horas_base)
 
             if nombre_turno == "Turno 1" and grupo in GRUPOS_TURNO_1:
+                turno_db = AttShift.objects.filter(shift_name=nombre_turno, status="Activo").first()
+                if not turno_db:
+                    continue
+                
+                
                 EmpleadoTurno.objects.update_or_create(
                     empleado=empleado,
                     fecha=fecha,
@@ -341,6 +353,11 @@ def procesar_marcaciones(fecha_inicio, fecha_fin):
                 )
 
             elif nombre_turno == "Turno 2" and grupo in GRUPOS_TURNO_2:
+                
+                turno_db = AttShift.objects.filter(shift_name=nombre_turno, status="Activo").first()
+                if not turno_db:
+                    continue
+                
                 horas_extras_diurnas = 0
                 if entrada.time() < turno["hora_entrada_min"]:
                     tiempo_extra_antes = (datetime.combine(fecha, turno["hora_entrada_min"]) - datetime.combine(fecha, entrada.time())).total_seconds() / 3600
@@ -369,6 +386,13 @@ def procesar_marcaciones(fecha_inicio, fecha_fin):
 
             else:
                 # ✅ Cualquier otro turno (Turno 4 al 10, administrativos, etc.)
+                
+                # ✅ Para otros turnos, validar si están activos antes
+                turno_db = AttShift.objects.filter(shift_name=nombre_turno, status="Activo").first()
+                if not turno_db:
+                    continue 
+                
+                
                 EmpleadoTurno.objects.update_or_create(
                     empleado=empleado,
                     fecha=fecha,

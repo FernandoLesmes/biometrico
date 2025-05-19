@@ -8,6 +8,8 @@
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/empleados.css' %}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
 </head>
 <body>
     <header>
@@ -101,6 +103,7 @@
                 <th>Centro de Costo</th>
                 <th>Correo</th>
                 <th>Estado</th>
+                <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
@@ -114,7 +117,16 @@
                 <td>{{ empleado.emp_role.nombre }}</td>
                 <td>{{ empleado.emp_cost_center.nombre }}</td>
                 <td>{{ empleado.emp_email }}</td>
-                <td>{{ empleado.emp_active|yesno:"Activo,Inactivo" }}</td>
+                <td>
+                    <select class="cambiar-estado {{ empleado.emp_active|yesno:'activo,inactivo' }}" data-id="{{ empleado.id }}">
+                        <option value="Activo" {% if empleado.emp_active %}selected{% endif %}>Activo</option>
+                        <option value="Inactivo" {% if not empleado.emp_active %}selected{% endif %}>Inactivo</option>
+                    </select>
+                </td>
+                
+                <td>
+                    <button class="editar" data-id="{{ turno.id }}">✏️ Editar</button>
+                </td>
             </tr>
             {% empty %}
             <tr>
@@ -140,6 +152,43 @@
         });
     </script>
 </body>
+
+
+
+
+<script>
+    $(document).ready(function () {
+        // ✅ Aplica clase visual según valor inicial
+        $(".cambiar-estado").each(function () {
+            const estado = $(this).val().toLowerCase();  // "Activo" o "Inactivo"
+            $(this).addClass(estado);
+        });
+
+        // ✅ Cambio de estado
+        $(".cambiar-estado").on("change", function () {
+            const select = $(this);
+            const nuevoEstado = select.val();
+            const empleadoId = select.data("id");
+            const csrfToken = $('meta[name="csrf-token"]').attr("content");
+
+            $.post("/empleados/cambiar_estado/", {
+                id: empleadoId,
+                estado: nuevoEstado,
+                csrfmiddlewaretoken: csrfToken
+            }).done(function () {
+                alert("✅ Estado del empleado actualizado correctamente");
+                // Cambia clase visual
+                select.removeClass("activo inactivo").addClass(nuevoEstado.toLowerCase());
+            }).fail(function () {
+                alert("❌ Error al actualizar el estado del empleado");
+            });
+        });
+    });
+</script>
+
+
+
+
 </html>
 
 

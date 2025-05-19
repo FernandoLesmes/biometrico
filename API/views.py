@@ -30,6 +30,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from .models import AttShift
 
+from .models import HrEmployee 
+
 # ================== VISTAS GENERALES ==================
 def home(request):
     return render(request, 'home.html')
@@ -203,6 +205,32 @@ def crear_empleado(request):
             }
             return render(request, "empleados.html", context)
     return redirect("empleados")
+
+
+# views.py
+def cambiar_estado_empleado(request):
+    if request.method == "POST":
+        empleado_id = request.POST.get("id")
+        nuevo_estado = request.POST.get("estado")
+
+        try:
+            empleado = HrEmployee.objects.get(id=empleado_id)
+            empleado.emp_active = True if nuevo_estado == "Activo" else False
+            empleado.save()
+            return JsonResponse({"success": True})
+        except HrEmployee.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Empleado no encontrado"})
+
+    return JsonResponse({"success": False, "error": "Método no permitido"})
+
+
+
+
+
+
+
+
+
 
 # ================== REPORTES ==================
 def reporte_turnos(request):
