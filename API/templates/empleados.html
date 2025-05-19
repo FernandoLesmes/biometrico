@@ -32,7 +32,9 @@
         <div class="modal-content">
             <span class="close">&times;</span>
             <h2>Agregar Nuevo Empleado</h2>
-            <form method="POST" action="{% url 'crear_empleado' %}">
+            
+            <form id="crearEmpleadoForm" method="POST" action="{% url 'crear_empleado' %}">
+    
                 {% csrf_token %}
                 <label for="emp_pin">Cédula:</label>
                 <input type="text" name="emp_pin" required>
@@ -125,7 +127,7 @@
                 </td>
                 
                 <td>
-                    <button class="editar" data-id="{{ turno.id }}">✏️ Editar</button>
+                    <button class="editar" data-id="{{ empleado.id }}">✏️ Editar</button>
                 </td>
             </tr>
             {% empty %}
@@ -133,6 +135,9 @@
                 <td colspan="9">No hay empleados registrados.</td>
             </tr>
             {% endfor %}
+
+            <script src="{% static 'js/editar_empleado.js' %}"></script>
+
         </tbody>
     </table>
 
@@ -187,6 +192,26 @@
 </script>
 
 
+
+<script>
+    $(document).ready(function () {
+        $("#abrirModalEmpleado").click(function () {
+            $("#crearEmpleadoForm")[0].reset();
+            $(".modal-content h2").text("Agregar Nuevo Empleado");
+            $("#crearEmpleadoForm button[type=submit]").text("Guardar");
+    
+            $("#crearEmpleadoForm").attr("action", "{% url 'crear_empleado' %}");
+            $("#crearEmpleadoForm").off("submit");
+    
+            $("#modalEmpleado").fadeIn();
+        });
+    
+        $(".close").click(function () {
+            $("#modalEmpleado").fadeOut();
+        });
+    });
+    </script>
+    
 
 
 </html>

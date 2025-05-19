@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 
+
 from .forms import ShiftForm, HrGroupForm
 from .models import (
     HrGroup, HrEmployee, AttShift, EmpleadoTurno,
@@ -222,6 +223,50 @@ def cambiar_estado_empleado(request):
             return JsonResponse({"success": False, "error": "Empleado no encontrado"})
 
     return JsonResponse({"success": False, "error": "Método no permitido"})
+
+
+
+
+
+
+def obtener_empleado(request, id):
+    empleado = get_object_or_404(HrEmployee, id=id)
+    data = {
+        "emp_pin": empleado.emp_pin,
+        "emp_firstname": empleado.emp_firstname,
+        "emp_lastname": empleado.emp_lastname,
+        "emp_job": empleado.emp_job.id,
+        "emp_group": empleado.emp_group.id,
+        "emp_role": empleado.emp_role.id,
+        "emp_cost_center": empleado.emp_cost_center.id,
+        "emp_email": empleado.emp_email,
+        "emp_active": empleado.emp_active,
+    }
+    return JsonResponse(data)
+
+
+
+
+@csrf_exempt
+def editar_empleado(request, id):
+    if request.method == "POST":
+        empleado = get_object_or_404(HrEmployee, id=id)
+        empleado.emp_pin = request.POST.get("emp_pin")
+        empleado.emp_firstname = request.POST.get("emp_firstname")
+        empleado.emp_lastname = request.POST.get("emp_lastname")
+        empleado.emp_email = request.POST.get("emp_email")
+        empleado.emp_job_id = request.POST.get("emp_job")
+        empleado.emp_group_id = request.POST.get("emp_group")
+        empleado.emp_role_id = request.POST.get("emp_role")
+        empleado.emp_cost_center_id = request.POST.get("emp_cost_center")
+        empleado.emp_active = request.POST.get("emp_active") == "true"
+        empleado.save()
+        return JsonResponse({"success": True})
+    return JsonResponse({"error": "Método no permitido"}, status=400)
+
+
+
+
 
 
 

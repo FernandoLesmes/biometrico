@@ -50,7 +50,9 @@ urlpatterns = [
     path("turnos/cambiar_estado/", views.cambiar_estado_turno, name="cambiar_estado_turno"),
     path("empleados/cambiar_estado/", views.cambiar_estado_empleado, name="cambiar_estado_empleado"),
     
-    
+    path('empleados/editar/<int:id>/', views.editar_empleado, name="editar_empleado"),
+    path('empleados/obtener/<int:id>/', views.obtener_empleado, name="obtener_empleado"),
+
 
 
     
