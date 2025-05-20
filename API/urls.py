@@ -53,6 +53,9 @@ urlpatterns = [
     path('empleados/editar/<int:id>/', views.editar_empleado, name="editar_empleado"),
     path('empleados/obtener/<int:id>/', views.obtener_empleado, name="obtener_empleado"),
 
+    path('crear-cargo/', views.crear_cargo, name="crear_cargo"),
+    path('crear-rol/', views.crear_rol, name="crear_rol"),
+    path('crear-centro-costo/', views.crear_centro_costo, name="crear_centro_costo"),
 
 
     

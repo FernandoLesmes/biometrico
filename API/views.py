@@ -33,6 +33,8 @@ from .models import AttShift
 
 from .models import HrEmployee 
 
+from API.models import EmpJob, EmpRole, EmpCostCenter
+
 # ================== VISTAS GENERALES ==================
 def home(request):
     return render(request, 'home.html')
@@ -263,6 +265,41 @@ def editar_empleado(request, id):
         empleado.save()
         return JsonResponse({"success": True})
     return JsonResponse({"error": "Método no permitido"}, status=400)
+
+
+
+
+
+
+@csrf_exempt
+def crear_cargo(request):
+    if request.method == "POST":
+        nombre = request.POST.get("nombre")
+        if nombre:
+            EmpJob.objects.create(nombre=nombre)
+            return JsonResponse({"success": True})
+    return JsonResponse({"success": False}, status=400)
+
+@csrf_exempt
+def crear_rol(request):
+    if request.method == "POST":
+        nombre = request.POST.get("nombre")
+        if nombre:
+            EmpRole.objects.create(nombre=nombre)
+            return JsonResponse({"success": True})
+    return JsonResponse({"success": False}, status=400)
+
+@csrf_exempt
+def crear_centro_costo(request):
+    if request.method == "POST":
+        nombre = request.POST.get("nombre")
+        if nombre:
+            EmpCostCenter.objects.create(nombre=nombre)
+            return JsonResponse({"success": True})
+    return JsonResponse({"success": False}, status=400)
+
+
+
 
 
 

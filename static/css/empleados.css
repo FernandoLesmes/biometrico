@@ -112,9 +112,13 @@ h1.titulo-empleados {
 /* ==========================
    🎛️ BOTÓN CREAR EMPLEADO
    ========================== */
-#abrirModalEmpleado {
-    display: block;
-    margin: 20px auto;
+/* Estilo común para todos los botones de abrir modales */
+#abrirModalEmpleado,
+#abrirModalCargo,
+#abrirModalRol,
+#abrirModalCentroCosto {
+    display: inline-block;
+    margin: 10px 10px;
     padding: 10px 20px;
     background-color: #007bff;
     color: white;
@@ -123,12 +127,78 @@ h1.titulo-empleados {
     cursor: pointer;
     font-size: 14px;
     font-weight: bold;
-    transition: 0.2s;
+    transition: background-color 0.2s ease;
 }
 
-#abrirModalEmpleado:hover {
+#abrirModalEmpleado:hover,
+#abrirModalCargo:hover,
+#abrirModalRol:hover,
+#abrirModalCentroCosto:hover {
     background-color: #0056b3;
 }
+
+/* === Estilo general del modal === */
+.modal-content {
+    position: relative;
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    width: 400px;
+    margin: 100px auto;  /* ✅ Centrado vertical con espacio arriba */
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    text-align: center;  /* ✅ Centra el contenido horizontalmente */
+}
+
+/* ✅ Estilo para inputs dentro de los formularios */
+.modal-content input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin: 15px 0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+    text-align: left;
+}
+
+/* ✅ Estilo para botón Guardar */
+.modal-content button[type="submit"] {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.modal-content button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+/* ✅ Estilo para la X de cerrar en cada modal */
+.close-cargo,
+.close-rol,
+.close-centro {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    color: red;
+    font-size: 22px;
+    font-weight: bold;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+
+
+
+
+
+
+
 
 /* ==========================
    🪟 MODAL FORMULARIO
@@ -262,3 +332,14 @@ select.cambiar-estado.inactivo {
     font-weight: bold;
 }
 
+
+
+
+/* 🔍 Caja de búsqueda */
+
+/* Mueve la caja de búsqueda de DataTables hacia la derecha */
+.dataTables_filter {
+    float: right;
+    margin-right: 45px; /* puedes aumentar si lo quieres más separado */
+    margin-top: 20px;
+}
