@@ -12,11 +12,14 @@ $(document).on("click", ".editar", function () {
         $("input[name=emp_email]").val(data.emp_email);
         $("input[name=emp_active]").prop("checked", data.emp_active);
 
-        // Mostrar modal y cambiar título
+        // ✅ Llenar biométrico si existe
+        if (data.biometrico) {
+            $("select[name=biometrico]").val(data.biometrico);
+        }
+
         $("#modalEmpleado").fadeIn();
         $(".modal-content h2").text("Editar Empleado");
 
-        // Cambiar submit
         $("form").off("submit").on("submit", function (e) {
             e.preventDefault();
 
@@ -30,6 +33,7 @@ $(document).on("click", ".editar", function () {
                 emp_cost_center: $("select[name=emp_cost_center]").val(),
                 emp_email: $("input[name=emp_email]").val(),
                 emp_active: $("input[name=emp_active]").is(":checked"),
+                biometrico: $("select[name=biometrico]").val(),  // ✅ Enviamos IP biométrico
                 csrfmiddlewaretoken: $("meta[name='csrf-token']").attr("content")
             };
 

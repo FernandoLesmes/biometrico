@@ -265,19 +265,32 @@ def obtener_empleado(request, id):
 @csrf_exempt
 def editar_empleado(request, id):
     if request.method == "POST":
-        empleado = get_object_or_404(HrEmployee, id=id)
-        empleado.emp_pin = request.POST.get("emp_pin")
-        empleado.emp_firstname = request.POST.get("emp_firstname")
-        empleado.emp_lastname = request.POST.get("emp_lastname")
-        empleado.emp_email = request.POST.get("emp_email")
-        empleado.emp_job_id = request.POST.get("emp_job")
-        empleado.emp_group_id = request.POST.get("emp_group")
-        empleado.emp_role_id = request.POST.get("emp_role")
-        empleado.emp_cost_center_id = request.POST.get("emp_cost_center")
-        empleado.emp_active = request.POST.get("emp_active") == "true"
-        empleado.save()
-        return JsonResponse({"success": True})
-    return JsonResponse({"error": "Método no permitido"}, status=400)
+        try:
+            empleado = get_object_or_404(HrEmployee, id=id)
+
+            # Actualiza datos del empleado
+            empleado.emp_pin = request.POST.get("emp_pin")
+            empleado.emp_firstname = request.POST.get("emp_firstname")
+            empleado.emp_lastname = request.POST.get("emp_lastname")
+            empleado.emp_email = request.POST.get("emp_email")
+            empleado.emp_job_id = request.POST.get("emp_job")
+            empleado.emp_group_id = request.POST.get("emp_group")
+            empleado.emp_role_id = request.POST.get("emp_role")
+            empleado.emp_cost_center_id = request.POST.get("emp_cost_center")
+            empleado.emp_active = request.POST.get("emp_active") == "true"
+            empleado.save()
+
+            # ⏺️ Verifica si se quiere registrar en el biométrico
+            ip_biometrico = request.POST.get("biometrico")
+            if ip_biometrico:
+                registrar_en_biometrico(empleado.emp_pin, empleado.emp_firstname, ip_biometrico)
+
+            return JsonResponse({"success": True})
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+
+    return JsonResponse({"error": "Método no permitido"}, status=405)
+
 
 
 
