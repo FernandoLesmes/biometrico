@@ -34,6 +34,8 @@ from .models import AttShift
 from .models import HrEmployee 
 
 from API.models import EmpJob, EmpRole, EmpCostCenter
+from API.utils.zk_helpers import registrar_en_biometrico
+
 
 # ================== VISTAS GENERALES ==================
 def home(request):
@@ -184,6 +186,10 @@ def lista_empleados(request):
 def crear_empleado(request):
     if request.method == "POST":
         try:
+            ip_biometrico = request.POST.get("biometrico")  # 🔹 Ciudad seleccionada
+            emp_pin = request.POST["emp_pin"]
+            emp_nombre = request.POST["emp_firstname"]
+            
             data = {
                 "emp_pin": request.POST["emp_pin"],
                 "emp_firstname": request.POST["emp_firstname"],
@@ -194,8 +200,15 @@ def crear_empleado(request):
                 "emp_cost_center": get_object_or_404(EmpCostCenter, id=request.POST["emp_cost_center"]),
                 "emp_email": request.POST["emp_email"],
                 "emp_active": request.POST.get("emp_active") == "on",
+                
             }
             HrEmployee.objects.create(**data)
+            
+              # 🔹 REGISTRAR EN EL BIOMÉTRICO
+            if ip_biometrico:
+                registrar_en_biometrico(emp_pin, emp_nombre, ip_biometrico)
+            
+            
             return redirect("empleados")
         except Exception as e:
             context = {
