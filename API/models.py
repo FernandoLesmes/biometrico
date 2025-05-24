@@ -99,9 +99,6 @@ class AttShift(models.Model):
 
 
 
-
-
-
 #roles
 
 class EmpRole(models.Model):
@@ -142,7 +139,12 @@ class EmpCostCenter(models.Model):
 
     #grupos
 class HrGroup(models.Model):
+    id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=255, unique=True)
+    jefe_planta = models.ForeignKey('HrEmployee', on_delete=models.SET_NULL, null=True, blank=True, related_name='grupos_como_jefe')
+
+    
+    
 
     class Meta:
         db_table = 'hr_group'  # 🔥 Asegura que se use la tabla correcta en la BD
@@ -152,6 +154,17 @@ class HrGroup(models.Model):
         return self.nombre  # ✅ Corregido
     
     
+class GrupoSupervisor(models.Model):
+    grupo = models.ForeignKey(HrGroup, on_delete=models.CASCADE, db_column='grupo_id')
+    supervisor = models.ForeignKey('HrEmployee', on_delete=models.CASCADE, db_column='supervisor_id')
+
+    class Meta:
+        db_table = 'grupo_supervisor'
+        managed = False  # porque ya la creaste manualmente
+        unique_together = ('grupo', 'supervisor')
+
+    
+   
     
     
     #empleados

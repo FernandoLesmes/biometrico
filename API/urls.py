@@ -57,6 +57,7 @@ urlpatterns = [
     path('crear-rol/', views.crear_rol, name="crear_rol"),
     path('crear-centro-costo/', views.crear_centro_costo, name="crear_centro_costo"),
 
+    path('grupo/<int:id>/detalle/', views.detalle_grupo, name='detalle_grupo'),
 
     
 

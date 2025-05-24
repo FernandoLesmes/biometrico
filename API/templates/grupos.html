@@ -52,10 +52,12 @@
         </thead>
         <tbody id="gruposBody">
             {% for grupo in grupos %}
-            <tr>
+
+            <tr data-id-grupo="{{ grupo.id }}">
                 <td>{{ grupo.id }}</td>
                 <td>{{ grupo.nombre }}</td>
             </tr>
+
             {% empty %}
             <tr>
                 <td colspan="2">No hay grupos registrados.</td>
@@ -63,6 +65,25 @@
             {% endfor %}
         </tbody>
     </table>
+
+
+     <!-- Modal Detalle Grupo -->
+    <div id="modalDetalleGrupo" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close-detalle">&times;</span>
+            <h2 id="grupoNombre"></h2>
+            <p><strong>Jefe de Planta:</strong> <span id="jefePlanta"></span></p>
+            <p><strong>Supervisores:</strong></p>
+            <ul id="supervisores"></ul>
+            <p><strong>Empleados:</strong></p>
+            <ul id="empleados"></ul>
+        </div>
+    </div>
+
+
+
+
+
 
     <div class="volver-inicio">
         <a href="{% url 'home' %}">⬅ Volver al Inicio</a>
@@ -74,10 +95,15 @@
                 $.get("/grupos/obtener/", function (response) {
                     let tbody = $("#gruposBody");
                     tbody.empty();
+
                     if (response.grupos.length > 0) {
                         response.grupos.forEach(function (grupo) {
-                            tbody.append(`<tr><td>${grupo.id}</td><td>${grupo.nombre}</td></tr>`);
+                            tbody.append(`<tr data-id-grupo="${grupo.id}"><td>${grupo.id}</td><td>${grupo.nombre}</td></tr>`);
+
                         });
+                    
+                    
+                        
                     } else {
                         tbody.append(`<tr><td colspan="2">No hay grupos registrados.</td></tr>`);
                     }
@@ -93,6 +119,26 @@
             $(".close").click(function () {
                 $("#modalGrupo").fadeOut();
             });
+
+
+            $(".close-detalle").click(function () {
+                $("#modalDetalleGrupo").fadeOut();
+            });
+
+            $(document).on("click", "tr[data-id-grupo]", function () {
+                const grupoId = $(this).data("id-grupo");
+                fetch(`/grupo/${grupoId}/detalle/`)
+                    .then(res => res.json())
+                    .then(data => {
+                        $("#grupoNombre").text(data.grupo);
+                        $("#jefePlanta").text(data.jefe_planta);
+                        $("#supervisores").html(data.supervisores.map(s => `<li>${s}</li>`).join(""));
+                        $("#empleados").html(data.empleados.map(e => `<li>${e}</li>`).join(""));
+                        $("#modalDetalleGrupo").fadeIn();
+                    });
+            });
+
+
 
             $("#formCrearGrupo").submit(function (event) {
                 event.preventDefault();
@@ -113,6 +159,9 @@
             });
         });
     </script>
+
+    <script src="{% static 'js/grupos.js' %}"></script>
+
 </body>
 </html>
 

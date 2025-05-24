@@ -257,17 +257,19 @@ th, td {
     overflow-y: auto;
     background-color: rgba(0, 0, 0, 0.4);
 }
-
 .modal-content {
     background-color: #fff;
     margin: 5% auto;
     padding: 20px;
     width: 90%;
-    max-width: 420px;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;  /* ✅ esto permite que si se llena, se agregue scroll */
     border-radius: 10px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    max-height: 90vh;
 }
+
+
 
 .modal-content h2 {
     text-align: center;
@@ -318,4 +320,70 @@ th, td {
     font-weight: bold;
     color: red;
     cursor: pointer;
+}
+
+
+
+
+
+
+#modalDetalleGrupo {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+#modalDetalleGrupo .modal-content {
+    background-color: #ffffff;
+    margin: 5% auto;
+    padding: 20px;
+    border-radius: 12px;
+    width: 60%;
+    box-shadow: 0 0 15px rgba(0, 123, 255, 0.3);
+    color: #333;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+#modalDetalleGrupo h2 {
+    color: #0056b3;
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+#modalDetalleGrupo p {
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+#modalDetalleGrupo ul {
+    list-style-type: none;
+    padding-left: 0;
+    margin-top: 5px;
+}
+
+#modalDetalleGrupo li {
+    background-color: #f0f8ff;
+    margin-bottom: 6px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.close-detalle {
+    float: right;
+    font-size: 24px;
+    font-weight: bold;
+    color: #999;
+    cursor: pointer;
+    transition: color 0.2s ease-in-out;
+}
+
+.close-detalle:hover {
+    color: #0056b3;
 }

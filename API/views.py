@@ -35,6 +35,7 @@ from .models import HrEmployee
 
 from API.models import EmpJob, EmpRole, EmpCostCenter
 from API.utils.zk_helpers import registrar_en_biometrico
+from .models import HrGroup, HrEmployee, GrupoSupervisor
 
 
 # ================== VISTAS GENERALES ==================
@@ -168,6 +169,31 @@ def obtener_grupos(request):
     if request.method == 'GET':
         grupos = list(HrGroup.objects.values('id', 'nombre'))
         return JsonResponse({'grupos': grupos})
+    
+    
+    
+
+def detalle_grupo(request, id):
+    try:
+        grupo = HrGroup.objects.get(id=id)
+        empleados = HrEmployee.objects.filter(emp_group=grupo)
+        supervisores = GrupoSupervisor.objects.filter(grupo=grupo)
+
+        data = {
+            'grupo': grupo.nombre,
+            'jefe_planta': f"{grupo.jefe_planta.emp_firstname} {grupo.jefe_planta.emp_lastname}" if grupo.jefe_planta else "No asignado",
+            'supervisores': [f"{sup.supervisor.emp_firstname} {sup.supervisor.emp_lastname}" for sup in supervisores],
+            'empleados': [f"{emp.emp_firstname} {emp.emp_lastname}" for emp in empleados],
+        }
+
+        return JsonResponse(data)
+    except HrGroup.DoesNotExist:
+        return JsonResponse({'error': 'Grupo no encontrado'}, status=404)   
+    
+    
+    
+    
+    
 
 # ================== EMPLEADOS ==================
 def empleados_view(request):
