@@ -182,7 +182,8 @@ class HrEmployee(models.Model):
     emp_email = models.CharField(max_length=150, unique=True, null=False, blank=False)  # Correo
     emp_photo = models.CharField(max_length=255, null=True, blank=True)  # Foto (opcional)
     emp_active = models.BooleanField(default=True, null=False, blank=False)  # Activo o Inactivo
-
+    
+    
     class Meta:
         db_table = 'hr_employee'   # 🔥 Aquí se lo dices a Django
         managed = False # 🔒 Importante: no la maneja Django

@@ -68,17 +68,45 @@
 
 
      <!-- Modal Detalle Grupo -->
-    <div id="modalDetalleGrupo" class="modal" style="display:none;">
-        <div class="modal-content">
-            <span class="close-detalle">&times;</span>
-            <h2 id="grupoNombre"></h2>
-            <p><strong>Jefe de Planta:</strong> <span id="jefePlanta"></span></p>
-            <p><strong>Supervisores:</strong></p>
-            <ul id="supervisores"></ul>
-            <p><strong>Empleados:</strong></p>
-            <ul id="empleados"></ul>
-        </div>
+        <!-- Fragmento HTML corregido y funcional -->
+<div id="modalDetalleGrupo" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close-detalle">&times;</span>
+        <h2 id="grupoNombre"></h2>
+
+        <p><strong>Jefe de Planta:</strong> <span id="jefePlanta"></span></p>
+        <p><strong>Supervisores:</strong></p>
+        <ul id="supervisores"></ul>
+        <p><strong>Empleados:</strong></p>
+        <ul id="empleados"></ul>
+
+        <!-- Formulario para asignar roles -->
+        <form id="formAsignarRoles" method="post">
+            {% csrf_token %}
+            <input type="hidden" id="grupoIdSeleccionado" name="grupo_id">
+
+            <label><strong>Asignar Jefe de Planta:</strong></label>
+            <select id="selectJefe" name="jefe_planta">
+                <option value="">Seleccione</option>
+                {% for jefe in empleados_jefes %}
+                    <option value="{{ jefe.id }}">{{ jefe.emp_firstname }} {{ jefe.emp_lastname }}</option>
+                {% endfor %}
+            </select>
+
+            <label><strong>Asignar Supervisores:</strong></label>
+            <select id="selectSupervisores" name="supervisores" multiple size="5">
+                {% for sup in empleados_supervisores %}
+                    <option value="{{ sup.id }}">{{ sup.emp_firstname }} {{ sup.emp_lastname }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit" class="btn-crear" style="margin-top: 15px;">Guardar asignaciones</button>
+        </form>
     </div>
+</div>
+
+    
+    
 
 
 
@@ -91,42 +119,34 @@
 
     <script>
         $(document).ready(function () {
+            // 1. Cargar grupos en la tabla
             function cargarGrupos() {
                 $.get("/grupos/obtener/", function (response) {
                     let tbody = $("#gruposBody");
                     tbody.empty();
-
+        
                     if (response.grupos.length > 0) {
                         response.grupos.forEach(function (grupo) {
-                            tbody.append(`<tr data-id-grupo="${grupo.id}"><td>${grupo.id}</td><td>${grupo.nombre}</td></tr>`);
-
+                            tbody.append(`
+                                <tr data-id-grupo="${grupo.id}">
+                                    <td>${grupo.id}</td>
+                                    <td>${grupo.nombre}</td>
+                                </tr>
+                            `);
                         });
-                    
-                    
-                        
                     } else {
                         tbody.append(`<tr><td colspan="2">No hay grupos registrados.</td></tr>`);
                     }
                 });
             }
-
+        
             cargarGrupos();
-
-            $("#crearGrupoBtn").click(function () {
-                $("#modalGrupo").fadeIn();
-            });
-
-            $(".close").click(function () {
-                $("#modalGrupo").fadeOut();
-            });
-
-
-            $(".close-detalle").click(function () {
-                $("#modalDetalleGrupo").fadeOut();
-            });
-
+        
+            // 2. Mostrar detalles del grupo al hacer clic en una fila
             $(document).on("click", "tr[data-id-grupo]", function () {
                 const grupoId = $(this).data("id-grupo");
+                $("#grupoIdSeleccionado").val(grupoId);
+        
                 fetch(`/grupo/${grupoId}/detalle/`)
                     .then(res => res.json())
                     .then(data => {
@@ -134,18 +154,37 @@
                         $("#jefePlanta").text(data.jefe_planta);
                         $("#supervisores").html(data.supervisores.map(s => `<li>${s}</li>`).join(""));
                         $("#empleados").html(data.empleados.map(e => `<li>${e}</li>`).join(""));
+        
+                        // Reiniciar selects
+                        $("#selectJefe").val("");
+                        $("#selectSupervisores option").prop("selected", false);
+        
                         $("#modalDetalleGrupo").fadeIn();
                     });
             });
-
-
-
+        
+            // 3. Cerrar modales
+            $(".close").click(function () {
+                $("#modalGrupo").fadeOut();
+            });
+        
+            $(".close-detalle").click(function () {
+                $("#modalDetalleGrupo").fadeOut();
+            });
+        
+            // 4. Mostrar modal para crear grupo
+            $("#crearGrupoBtn").click(function () {
+                $("#modalGrupo").fadeIn();
+            });
+        
+            // 5. Crear grupo nuevo
             $("#formCrearGrupo").submit(function (event) {
                 event.preventDefault();
-                let data = {
+                const data = {
                     nombre: $("input[name=nombre]").val(),
                     csrfmiddlewaretoken: $("input[name=csrfmiddlewaretoken]").val()
                 };
+        
                 $.post("/grupos/crear/", data, function (response) {
                     if (response.success) {
                         alert("✅ Grupo creado con éxito");
@@ -157,11 +196,28 @@
                     }
                 });
             });
+        
+            // 6. Asignar jefe de planta y supervisores
+            $("#formAsignarRoles").submit(function (event) {
+                event.preventDefault();
+                const grupoId = $("#grupoIdSeleccionado").val();
+                const formData = $(this).serialize();
+        
+                $.post(`/grupo/${grupoId}/asignar_roles/`, formData, function (response) {
+                    if (response.success) {
+                        alert("✅ Roles asignados correctamente");
+                        $("#modalDetalleGrupo").fadeOut();
+                    } else {
+                        alert("❌ " + (response.error || "Error al guardar los roles"));
+                    }
+                }).fail(function (xhr) {
+                    alert("❌ Error en la solicitud: " + xhr.status);
+                });
+            });
         });
+        
     </script>
 
     <script src="{% static 'js/grupos.js' %}"></script>
-
 </body>
 </html>
-

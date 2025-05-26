@@ -387,3 +387,39 @@ th, td {
 .close-detalle:hover {
     color: #0056b3;
 }
+
+
+
+/*para seleccionar el jefe de pmata y supervisor 
+.select-rol {
+    width: 100%;
+    padding: 8px 10px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    background-color: #f9f9f9;
+}
+
+.select-rol:focus {
+    border-color: #007bff;
+    outline: none;
+    background-color: #ffffff;
+}
+
+.btn-guardar {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-guardar:hover {
+    background-color: #0056b3;
+}
+*/

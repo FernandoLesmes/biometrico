@@ -36,8 +36,11 @@ from .models import HrEmployee
 from API.models import EmpJob, EmpRole, EmpCostCenter
 from API.utils.zk_helpers import registrar_en_biometrico
 from .models import HrGroup, HrEmployee, GrupoSupervisor
+from django.views.decorators.http import require_POST
+from django.shortcuts import get_object_or_404, render
 
 
+from .models import HrGroup, HrEmployee
 # ================== VISTAS GENERALES ==================
 def home(request):
     return render(request, 'home.html')
@@ -192,7 +195,51 @@ def detalle_grupo(request, id):
     
     
     
+@require_POST
+def asignar_roles_grupo(request, id):
+    grupo = get_object_or_404(HrGroup, id=id)
+
+    jefe_id = request.POST.get('jefe_planta')
+    supervisores_ids = request.POST.getlist('supervisores')
+
+    # Verifica y asigna el jefe de planta
+    if jefe_id:
+        jefe = HrEmployee.objects.get(id=jefe_id)
+        if jefe.emp_role.nombre.lower() == "jefe de área":  # ¡CORREGIDO!
+            grupo.jefe_planta = jefe
+            grupo.save()
+        else:
+            return JsonResponse({'error': 'El empleado seleccionado no tiene el rol de jefe de área'}, status=400)
+
+    # Reemplaza los supervisores actuales por los nuevos
+    GrupoSupervisor.objects.filter(grupo=grupo).delete()
+    for sup_id in supervisores_ids:
+        supervisor = HrEmployee.objects.get(id=sup_id)
+        if supervisor.emp_role.nombre.lower() == "supervisor":
+            GrupoSupervisor.objects.create(grupo=grupo, supervisor=supervisor)
+
+    return JsonResponse({'success': True})
+
+
+def grupos_view(request):
+    print("🚨 ENTRÓ A grupos_view") 
+    grupos = HrGroup.objects.all()
+
+    # ✅ Aquí filtras por roles correctos
+    empleados_jefes = HrEmployee.objects.filter(emp_role__nombre__iexact="Jefe de Área", emp_active=True)
+    empleados_supervisores = HrEmployee.objects.filter(emp_role__nombre__iexact="Supervisor", emp_active=True)
+
     
+    print("Jefes encontrados:", empleados_jefes)  # DEBUG
+    print("Supervisores encontrados:", empleados_supervisores)  # DEBUG
+
+    return render(request, "grupos.html", {
+        "grupos": grupos,
+        "empleados_jefes": empleados_jefes,
+        "empleados_supervisores": empleados_supervisores,
+    })
+        
+   
     
 
 # ================== EMPLEADOS ==================
