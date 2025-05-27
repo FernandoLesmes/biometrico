@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.contrib.auth.models import User
 
 class AcGroup(models.Model):
     id = models.AutoField(primary_key=True)
@@ -183,6 +183,7 @@ class HrEmployee(models.Model):
     emp_photo = models.CharField(max_length=255, null=True, blank=True)  # Foto (opcional)
     emp_active = models.BooleanField(default=True, null=False, blank=False)  # Activo o Inactivo
     
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
     
     class Meta:
         db_table = 'hr_employee'   # 🔥 Aquí se lo dices a Django

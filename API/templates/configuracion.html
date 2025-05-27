@@ -18,7 +18,9 @@
         <a href="{% url 'turnos' %}" class="box {% if request.path == '/turnos/' %}activo{% endif %}">Turnos</a>
         <a href="{% url 'empleados' %}" class="box {% if request.path == '/empleados/' %}activo{% endif %}">Empleados</a>
         <a href="{% url 'grupos' %}" class="box {% if request.path == '/grupos/' %}activo{% endif %}">Grupos</a>
-        <a href="{% url 'reportes' %}" class="box {% if request.path == '/reportes/' %}activo{% endif %}">Reportes</a>
+
+        <a href="{% url 'reportes_view' %}" class="box {% if request.path == '/reportes/' %}activo{% endif %}">Reportes</a>
+
         <a href="{% url 'configuracion' %}" class="box {% if request.path == '/configuracion/' %}activo{% endif %}">Configuraciones</a>
     </div>
     </header>
@@ -26,6 +28,49 @@
 
     <h1 class="titulo-configuracion">Cofiguración</h1>
     <a href="{% url 'home' %}">Volver al Inicio</a>
+
+
+    <div class="contenedor-tabla">
+        {% if request.user.hremployee.emp_role.nombre == "Administrador" %}
+        <h2>Gestión de Roles</h2>
+        <table class="tabla-configuracion">
+            <thead>
+                <tr>
+                    <th>Empleado</th>
+                    <th>Rol actual</th>
+                    <th>Nuevo rol</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for emp in empleados %}
+                <tr>
+                    <form method="post">
+                        {% csrf_token %}
+                        <td>{{ emp.emp_firstname }} {{ emp.emp_lastname }}</td>
+                        <td>{{ emp.emp_role.nombre }}</td>
+                        <td>
+                            <input type="hidden" name="usuario_id" value="{{ emp.id }}">
+                            <select name="nuevo_rol_id">
+                                {% for rol in roles %}
+                                    <option value="{{ rol.id }}" {% if rol.id == emp.emp_role.id %}selected{% endif %}>{{ rol.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td>
+                            <button type="submit" class="btn-guardar">Guardar</button>
+                        </td>
+                    </form>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="color: red;">❌ No tienes permiso para ver esta sección.</p>
+        {% endif %}
+    </div>
+
+
 
 </body>
 </html>

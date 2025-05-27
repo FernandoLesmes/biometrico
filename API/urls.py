@@ -41,18 +41,20 @@ urlpatterns = [
     path("turnos/cambiar_estado/", views.cambiar_estado_turno, name="cambiar_estado_turno"),
 
     # Reportes
-    path('reportes/', views.reportes_view, name='reportes'),
+    path('reportes/', views.reportes_view, name='reportes_view'),
     path('reportes/turnos/', views.reporte_turnos, name='reporte_turnos'),
     path('reportes/horas_extras/', views.reporte_horas_extras, name='reporte_horas_extras'),
 
     # Procesamiento
-    path('procesar-marcaciones/', ejecutar_procesamiento, name='procesar_marcaciones'),
+    path('procesar-marcaciones/', views.ejecutar_procesamiento, name='procesar_marcaciones'),
 
     # Configuraciones
     path('configuracion/', views.configuracion_view, name='configuracion'),
     path('crear-cargo/', views.crear_cargo, name="crear_cargo"),
     path('crear-rol/', views.crear_rol, name="crear_rol"),
     path('crear-centro-costo/', views.crear_centro_costo, name="crear_centro_costo"),
+    
+
 ]
 
 

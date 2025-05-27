@@ -25,7 +25,9 @@
             <a href="{% url 'turnos' %}" class="box {% if request.path == '/turnos/' %}activo{% endif %}">Turnos</a>
             <a href="{% url 'empleados' %}" class="box {% if request.path == '/empleados/' %}activo{% endif %}">Empleados</a>
             <a href="{% url 'grupos' %}" class="box {% if request.path == '/grupos/' %}activo{% endif %}">Grupos</a>
-            <a href="{% url 'reportes' %}" class="box {% if request.path == '/reportes/' %}activo{% endif %}">Reportes</a>
+
+            <a href="{% url 'reportes_view' %}" class="box {% if request.path == '/reportes/' %}activo{% endif %}">Reportes</a>
+
             <a href="{% url 'configuracion' %}" class="box {% if request.path == '/configuracion/' %}activo{% endif %}">Configuraciones</a>
         </div>
     </header>

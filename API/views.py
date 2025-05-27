@@ -41,6 +41,11 @@ from django.shortcuts import get_object_or_404, render
 
 
 from .models import HrGroup, HrEmployee
+
+from datetime import datetime, timedelta
+from django.utils.timezone import make_aware
+
+
 # ================== VISTAS GENERALES ==================
 def home(request):
     return render(request, 'home.html')
@@ -401,18 +406,6 @@ def crear_centro_costo(request):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 # ================== REPORTES ==================
 def reporte_turnos(request):
     asignaciones = EmpleadoTurno.objects.select_related('empleado', 'turno').all()
@@ -430,8 +423,25 @@ def reportes_view(request):
     fecha_inicio = parse_fecha(desde)
     fecha_fin = parse_fecha(hasta)
 
-    if fecha_inicio and fecha_fin:
-        procesar_marcaciones(fecha_inicio, fecha_fin)
+    if hasattr(request.user, 'hremployee'):
+        empleado = request.user.hremployee
+        rol = empleado.emp_role.nombre.lower()
+
+        if rol != 'administrador':
+            # ✅ Listado de grupos que puede ver este usuario (como jefe o supervisor)
+            grupos_jefe = HrGroup.objects.filter(jefe_planta=empleado).values_list('id', flat=True)
+            grupos_supervisor = GrupoSupervisor.objects.filter(supervisor=empleado).values_list('grupo_id', flat=True)
+            grupos_autorizados = set(grupos_jefe) | set(grupos_supervisor)
+
+            # ❌ Si pidió un grupo que no le pertenece, lo bloqueamos
+            if grupo and int(grupo) not in grupos_autorizados:
+                return render(request, 'reportes.html', {'error': '❌ No tienes permiso para ver este grupo.'})
+
+            # Si no se especificó grupo y tiene acceso a alguno, se lo asignamos automáticamente
+            if not grupo and grupos_autorizados:
+                grupo = list(grupos_autorizados)[0]
+        
+        
 
     filtros = {
         'apellidos': apellidos,
@@ -446,12 +456,13 @@ def reportes_view(request):
 
 
 def ejecutar_procesamiento(request):
-    # Definimos el rango de fechas (mismo que el de tu proyecto)
-    FECHA_INICIO = make_aware(datetime(2025, 4, 6, 0, 0, 0))
-    FECHA_FIN = make_aware(datetime(2025, 4, 25, 23, 59, 59))
+    hoy = datetime.now()
+    hace_tres_dias = hoy - timedelta(days=3)
+
+    FECHA_INICIO = make_aware(hace_tres_dias.replace(hour=0, minute=0, second=0))
+    FECHA_FIN = make_aware(hoy.replace(hour=23, minute=59, second=59))
 
     procesar_marcaciones(FECHA_INICIO, FECHA_FIN)
 
-    # Después de procesar, te devuelve al reporte
-    return redirect('reportes_view')  # asegúrate que el nombre coincida con el nombre de la vista del reporte
+    return redirect('reportes_view')  # 👈 asegúrate que el name en urls.py sea correcto
 
