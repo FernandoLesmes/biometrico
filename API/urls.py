@@ -54,6 +54,9 @@ urlpatterns = [
     path('crear-rol/', views.crear_rol, name="crear_rol"),
     path('crear-centro-costo/', views.crear_centro_costo, name="crear_centro_costo"),
     
+    path("configuracion/toggle-usuario/", views.toggle_usuario_activo, name="toggle_usuario"),
+
+    
 
 ]
 

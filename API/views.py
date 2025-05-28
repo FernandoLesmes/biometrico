@@ -46,12 +46,108 @@ from datetime import datetime, timedelta
 from django.utils.timezone import make_aware
 
 
+from django.contrib.auth.models import User
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from API.models import HrEmployee, EmpRole
+from django.db import transaction
+
+
 # ================== VISTAS GENERALES ==================
 def home(request):
     return render(request, 'home.html')
 
+
+
+from django.contrib.auth import update_session_auth_hash
+
 def configuracion_view(request):
-    return render(request, 'configuracion.html')
+    if not hasattr(request.user, 'hremployee') or request.user.hremployee.emp_role.nombre != "Administrador":
+        messages.error(request, "❌ No tienes permiso para ver esta sección.")
+        return redirect("home")
+
+    # Filtrar empleados activos con roles válidos
+    roles_validos = ["Administrador", "Supervisor", "Jefe de Área", "Líder HSE"]
+    empleados = HrEmployee.objects.filter(emp_active=True, emp_role__nombre__in=roles_validos)
+
+    if request.method == "POST" and 'crear_usuario' in request.POST:
+        usuario_id = request.POST.get("usuario_id")
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        confirmar_password = request.POST.get("confirmar_password")
+
+        # Validaciones básicas
+        if not all([usuario_id, username, password, confirmar_password]):
+            messages.error(request, "❌ Todos los campos son obligatorios.")
+            return redirect("configuracion")
+
+        if password != confirmar_password:
+            messages.error(request, "⚠️ Las contraseñas no coinciden.")
+            return redirect("configuracion")
+
+        try:
+            empleado = HrEmployee.objects.get(id=usuario_id)
+
+            if empleado.user:
+                # Actualizar usuario existente
+                empleado.user.username = username
+                empleado.user.set_password(password)
+                empleado.user.save()
+
+                # Si es el mismo usuario que está en sesión, mantener la sesión activa
+                if request.user == empleado.user:
+                    update_session_auth_hash(request, empleado.user)
+                    messages.success(request, f"🔐 Tu usuario fue restablecido sin cerrar la sesión.")
+                else:
+                    messages.success(request, f"🔐 Usuario actualizado: {empleado.user.username}")
+            else:
+                # Crear nuevo usuario si no existe
+                if User.objects.filter(username=username).exists():
+                    messages.error(request, f"⚠️ El nombre de usuario '{username}' ya está en uso.")
+                    return redirect("configuracion")
+
+                user = User.objects.create_user(
+                    username=username,
+                    password=password,
+                    first_name=empleado.emp_firstname,
+                    last_name=empleado.emp_lastname,
+                    email=empleado.emp_email
+                )
+                empleado.user = user
+                empleado.save()
+                messages.success(request, f"✅ Usuario creado correctamente para {username}")
+
+        except HrEmployee.DoesNotExist:
+            messages.error(request, "❌ Empleado no encontrado.")
+
+        return redirect("configuracion")
+
+    return render(request, "configuracion.html", {"empleados": empleados})
+
+
+
+
+# bloquer usuario de ingreso de sesion
+def toggle_usuario_activo(request):
+    if not hasattr(request.user, 'hremployee') or request.user.hremployee.emp_role.nombre != "Administrador":
+        return JsonResponse({"success": False, "error": "No autorizado"}, status=403)
+
+    usuario_id = request.POST.get("usuario_id")
+    try:
+        empleado = HrEmployee.objects.get(id=usuario_id)
+        if empleado.user:
+            empleado.user.is_active = not empleado.user.is_active
+            empleado.user.save()
+            return JsonResponse({"success": True, "nuevo_estado": empleado.user.is_active})
+        else:
+            return JsonResponse({"success": False, "error": "Este empleado no tiene usuario creado."})
+    except HrEmployee.DoesNotExist:
+        return JsonResponse({"success": False, "error": "Empleado no encontrado"})
+
+
+
+
+
 
 def asistencia_view(request):
     return render(request, 'grupos.html')
