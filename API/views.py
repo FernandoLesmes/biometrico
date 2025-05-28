@@ -51,6 +51,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from API.models import HrEmployee, EmpRole
 from django.db import transaction
+from django.contrib.auth import update_session_auth_hash
 
 
 # ================== VISTAS GENERALES ==================
@@ -59,7 +60,7 @@ def home(request):
 
 
 
-from django.contrib.auth import update_session_auth_hash
+
 
 def configuracion_view(request):
     if not hasattr(request.user, 'hremployee') or request.user.hremployee.emp_role.nombre != "Administrador":
@@ -123,6 +124,7 @@ def configuracion_view(request):
         return redirect("configuracion")
 
     return render(request, "configuracion.html", {"empleados": empleados})
+
 
 
 
