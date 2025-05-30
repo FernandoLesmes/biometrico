@@ -14,20 +14,26 @@ import django
 django.setup()
 
 from API.models import HrEmployee, AttPunch
+from django.db.models import Max
 
-DISPOSITIVOS = [
-    {'ip': '192.168.0.211', 'nombre': 'BIO-01'},
-    {'ip': '192.168.1.211', 'nombre': 'BIO-02'},
-    {'ip': '192.168.4.211', 'nombre': 'BIO-03'},
-]
+# ===============================
+# 🔍 Función para obtener última fecha por terminal
+# ===============================
+def obtener_ultima_fecha_terminal(nombre_terminal):
+    ultima = AttPunch.objects.filter(terminal_id=nombre_terminal).aggregate(Max("punch_time"))["punch_time__max"]
+    if ultima:
+        return ultima
+    else:
+        return make_aware(datetime(2024, 1, 1, 0, 0, 0))  # Fecha base si no hay registros
 
-# ✅ Fechas fijas para pruebas del 7 al 12 de abril
-FECHA_MINIMA = make_aware(datetime(2025, 4, 20, 21, 59, 0))
-
+# ===============================
+# 🔄 Sincronizar un dispositivo
+# ===============================
 def sincronizar_dispositivo(ip, nombre_terminal):
     print(f"📡 Conectando a {nombre_terminal} ({ip})...")
     zk = ZK(ip, port=4370, timeout=10)
     conn = None
+    fecha_minima = obtener_ultima_fecha_terminal(nombre_terminal)
 
     try:
         conn = zk.connect()
@@ -38,7 +44,7 @@ def sincronizar_dispositivo(ip, nombre_terminal):
 
         for r in registros:
             marca = make_aware(r.timestamp)
-            if marca >= FECHA_MINIMA:
+            if marca > fecha_minima:
                 emp_pin = str(r.user_id).strip()
                 punch_type = str(r.status)
 
@@ -70,7 +76,15 @@ def sincronizar_dispositivo(ip, nombre_terminal):
                 pass
             print(f"🔌 {nombre_terminal} desconectado.\n")
 
-# Ejecutar
+# ===============================
+# Ejecutar sincronización
+# ===============================
+DISPOSITIVOS = [
+    {'ip': '192.168.0.211', 'nombre': 'BIO-01'},
+    {'ip': '192.168.1.211', 'nombre': 'BIO-02'},
+    {'ip': '192.168.4.211', 'nombre': 'BIO-03'},
+]
+
 if __name__ == "__main__":
     for d in DISPOSITIVOS:
         sincronizar_dispositivo(d['ip'], d['nombre'])

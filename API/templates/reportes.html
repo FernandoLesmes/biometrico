@@ -23,6 +23,11 @@
     </div>
     </header>
 
+    <h2 class="bienvenida">
+        👋 Bienvenido, <span class="usuario">{{ user.username }}</span><br>
+        <span class="subtitulo">Sistema de gestión de turnos y control de ingresos y salidas</span>
+    </h2>
+
     <h1 class="titulo-reportes">Gestión de asistencia</h1>
 
     <form method="get" action="{% url 'procesar_marcaciones' %}" class="procesar-form" onsubmit="mostrarCarga()">
@@ -57,11 +62,15 @@
                 <label>Apellido:</label>
                 <input type="text" name="apellidos" value="{{ request.GET.apellidos }}">
             </div>
-    
+            
+
             <div class="campo">
-                <label>Grupo:</label>
-                <input type="text" name="grupo" value="{{ request.GET.grupo }}">
+                <label>Grupos:</label>
+                <input type="text" name="grupos" value="{{ request.GET.grupos }}">
             </div>
+    
+           
+            
     
             <div class="campo">
                 <label>Desde:</label>

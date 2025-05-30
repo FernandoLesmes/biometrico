@@ -54,12 +54,17 @@ from django.db import transaction
 from django.contrib.auth import update_session_auth_hash
 
 
+def parse_fecha(fecha_str):
+    try:
+        return datetime.strptime(fecha_str.strip().rstrip('-'), "%Y-%m-%d").date()
+    except Exception:
+        return None
+
+
+
 # ================== VISTAS GENERALES ==================
 def home(request):
     return render(request, 'home.html')
-
-
-
 
 
 def configuracion_view(request):
@@ -509,6 +514,10 @@ def reporte_turnos(request):
     asignaciones = EmpleadoTurno.objects.select_related('empleado', 'turno').all()
     return render(request, 'reportes/turnos.html', {'asignaciones': asignaciones})
 
+
+
+
+from API.models import HrGroup, GrupoSupervisor  # asegúrate de tener esto
 def reportes_view(request):
     tipo = request.GET.get("tipo", "basico")
     cedula = request.GET.get("cedula")
@@ -517,40 +526,64 @@ def reportes_view(request):
     desde = request.GET.get("desde")
     hasta = request.GET.get("hasta")
 
-    from API.utils.reportes import parse_fecha  # Evitamos import circular
     fecha_inicio = parse_fecha(desde)
     fecha_fin = parse_fecha(hasta)
 
-    if hasattr(request.user, 'hremployee'):
-        empleado = request.user.hremployee
-        rol = empleado.emp_role.nombre.lower()
-
-        if rol != 'administrador':
-            # ✅ Listado de grupos que puede ver este usuario (como jefe o supervisor)
-            grupos_jefe = HrGroup.objects.filter(jefe_planta=empleado).values_list('id', flat=True)
-            grupos_supervisor = GrupoSupervisor.objects.filter(supervisor=empleado).values_list('grupo_id', flat=True)
-            grupos_autorizados = set(grupos_jefe) | set(grupos_supervisor)
-
-            # ❌ Si pidió un grupo que no le pertenece, lo bloqueamos
-            if grupo and int(grupo) not in grupos_autorizados:
-                return render(request, 'reportes.html', {'error': '❌ No tienes permiso para ver este grupo.'})
-
-            # Si no se especificó grupo y tiene acceso a alguno, se lo asignamos automáticamente
-            if not grupo and grupos_autorizados:
-                grupo = list(grupos_autorizados)[0]
-        
-        
-
     filtros = {
         'apellidos': apellidos,
-        'grupo': grupo,
+        'grupo': None,  # Por defecto sin grupo
         'cedula': cedula,
         'desde': fecha_inicio,
         'hasta': fecha_fin,
     }
 
+    grupos_contexto = HrGroup.objects.none()
+
+    if hasattr(request.user, 'hremployee'):
+        empleado = request.user.hremployee
+        rol = empleado.emp_role.nombre.lower()
+
+        if rol in ['administrador', 'líder hse']:
+            grupos_contexto = HrGroup.objects.all()
+            # 👇 Solo se filtra si el admin selecciona un grupo explícitamente
+            if grupo:
+                try:
+                    filtros['grupo'] = int(grupo)
+                except ValueError:
+                    return render(request, 'reportes.html', {'error': '❌ Grupo inválido.'})
+        else:
+            grupos_jefe = HrGroup.objects.filter(jefe_planta=empleado)
+            grupos_supervisor = HrGroup.objects.filter(gruposupervisor__supervisor=empleado)
+            grupos_contexto = (grupos_jefe | grupos_supervisor).distinct()
+
+            if grupo:
+                try:
+                    grupo_id = int(grupo)
+                    if grupo_id not in grupos_contexto.values_list('id', flat=True):
+                        return render(request, 'reportes.html', {'error': '❌ No tienes permiso para ver este grupo.'})
+                    filtros['grupo'] = grupo_id
+                except ValueError:
+                    return render(request, 'reportes.html', {'error': '❌ Grupo inválido.'})
+            elif grupos_contexto.exists():
+                filtros['grupo'] = grupos_contexto.first().id
+            else:
+                return render(request, 'reportes.html', {'error': '❌ No tienes grupos asignados.'})
+
+    print("🔍 Filtros:", filtros)
+
     datos = generar_reporte_basico(filtros) if tipo == 'basico' else reporte_horas_extras(filtros)
-    return render(request, 'reportes.html', {'datos': datos, 'tipo': tipo})
+
+    return render(request, 'reportes.html', {
+        'datos': datos,
+        'tipo': tipo,
+        'grupos': grupos_contexto
+    })
+
+
+
+
+
+
 
 
 def ejecutar_procesamiento(request):

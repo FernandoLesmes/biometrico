@@ -34,19 +34,18 @@ def generar_reporte_basico(filtros):
 
     if filtros.get('cedula'):
         punches = punches.filter(employee__emp_pin__icontains=filtros['cedula'])
-        
+
     if filtros.get("apellidos"):
         punches = punches.filter(employee__emp_lastname__icontains=filtros["apellidos"])
 
-    
     if filtros.get("grupo"):
-        punches = punches.filter(employee__emp_group__nombre__icontains=filtros["grupo"]) 
-         
+        punches = punches.filter(employee__emp_group_id=filtros["grupo"])
+
     punches = punches.filter(employee__emp_active=True)
-    
 
     if filtros.get('desde'):
         punches = punches.filter(punch_time__date__gte=filtros['desde'])
+
     if filtros.get('hasta'):
         punches = punches.filter(punch_time__date__lte=filtros['hasta'])
 
@@ -80,6 +79,7 @@ def generar_reporte_basico(filtros):
 
 
 
+
 # ========================
 # ✅ Reporte de horas extras
 # ========================
@@ -94,10 +94,9 @@ def reporte_horas_extras(filtros):
         registros = registros.filter(empleado__emp_lastname__icontains=filtros['apellidos'])
 
     if filtros.get('grupo'):
-        registros = registros.filter(empleado__emp_group__nombre__icontains=filtros['grupo'])
-        
-    registros = registros.filter(empleado__emp_active=True)
+        registros = registros.filter(empleado__emp_group_id=filtros['grupo'])
 
+    registros = registros.filter(empleado__emp_active=True)
 
     if filtros.get('desde'):
         registros = registros.filter(fecha__gte=filtros['desde'])
@@ -128,50 +127,11 @@ def reporte_horas_extras(filtros):
 
 
 
+
 # ========================
 # ✅ Vista de reportes (unificada)
 # ========================
-def reportes_view(request):
-    tipo = request.GET.get("tipo", "basico")
-    apellidos = request.GET.get("apellidos")
-    grupo = request.GET.get("grupo")
-    cedula = request.GET.get("cedula")
-    desde = request.GET.get("desde")
-    hasta = request.GET.get("hasta")
 
-    # ✅ Si no hay fechas en el filtro, usamos el mes actual (por defecto)
-    if not desde:
-        desde = now().replace(day=1).strftime('%Y-%m-%d')  # Primer día del mes actual
-    if not hasta:
-        hasta = now().strftime('%Y-%m-%d')  # Fecha de hoy
-
-    # ✅ Convertimos a tipo date
-    fecha_inicio = parse_fecha(desde)
-    fecha_fin = parse_fecha(hasta)
-
-    # ✅ Procesamos solo si hay fechas válidas
-    if fecha_inicio and fecha_fin:
-        procesar_marcaciones(fecha_inicio, fecha_fin)
-
-    filtros = {
-        'apellidos': apellidos,
-        'grupo': grupo,
-        'cedula': cedula,
-        'desde': fecha_inicio,
-        'hasta': fecha_fin,
-    }
-
-    if tipo == 'basico':
-        datos = generar_reporte_basico(filtros)
-    elif tipo == 'horas_extras':
-        datos = reporte_horas_extras(filtros)
-    else:
-        datos = []
-
-    return render(request, 'reportes.html', {
-        'datos': datos,
-        'tipo': tipo
-    })
 
 # ========================
 # ✅ Turnos especiales (Turno 3)
