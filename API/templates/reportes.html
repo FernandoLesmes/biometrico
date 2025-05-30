@@ -181,7 +181,16 @@
                     <td>{{ r.horas_extras_festivas_nocturnas }}</td>
                     <td>{{ r.recargo_nocturno }}</td>
                     <td>{{ r.recargo_nocturno_festivo }}</td>
-                    <td>{{ r.aprobado|yesno:"✅,❌" }}</td>
+                    <td>
+                        {% if request.user.hremployee.emp_role.nombre|lower == "jefe de área" %}
+                            <button class="btn-aprobar" data-id="{{ r.id }}" data-tipo="lider">✔️ Lider</button>
+                            <button class="btn-aprobar" data-id="{{ r.id }}" data-tipo="jefe">✔️ supervisor</button>
+                        {% elif request.user.hremployee.emp_role.nombre|lower == "supervisor" %}
+                            <button class="btn-aprobar" data-id="{{ r.id }}" data-tipo="lider">✔️ Lider</button>
+                        {% else %}
+                            {{ r.aprobado|yesno:"✅,❌" }}
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -189,19 +198,13 @@
     {% endif %}
 
     <a href="{% url 'home' %}" class="btn">Volver al Inicio</a>
-    <form method="get" action="{% url 'procesar_marcaciones' %}">
-        <button type="submit" class="btn btn-primary">
-            🔄 Procesar Marcaciones
-        </button>
-    </form>
+
+
+
     
 
+        
 
-    <script>
-        function mostrarCarga() {
-            document.getElementById("cargando").style.display = "flex";
-        }
-    </script>
         
 
 
