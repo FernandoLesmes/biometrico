@@ -597,3 +597,40 @@ def ejecutar_procesamiento(request):
 
     return redirect('reportes_view')  # 👈 asegúrate que el name en urls.py sea correcto
 
+
+
+@csrf_exempt
+def aprobar_horas_extra(request):
+    import json
+
+    if request.method == "POST":
+        data = json.loads(request.body)
+        turno_id = data.get("id")
+        field = data.get("field")
+        value = data.get("value")
+
+        try:
+            turno = EmpleadoTurno.objects.get(id=turno_id)
+
+            if field == "aprobado_supervisor":
+                if request.user.hremployee.emp_role.nombre.lower() not in ["supervisor", "jefe de área"]:
+                    return JsonResponse({"success": False, "error": "No autorizado."})
+                turno.aprobado_supervisor = value
+
+
+            elif field == "aprobado_jefe_area":
+                if request.user.hremployee.emp_role.nombre.lower() != "jefe de área":
+                    return JsonResponse({"success": False, "error": "No autorizado."})
+                turno.aprobado_jefe_area = value
+
+            else:
+                return JsonResponse({"success": False, "error": "Campo no válido"})
+
+            turno.save()
+            return JsonResponse({"success": True})
+
+        except EmpleadoTurno.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Registro no encontrado"})
+
+    return JsonResponse({"success": False, "error": "Método no permitido"}, status=405)
+

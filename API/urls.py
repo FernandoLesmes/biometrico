@@ -55,6 +55,8 @@ urlpatterns = [
     path('crear-centro-costo/', views.crear_centro_costo, name="crear_centro_costo"),
     
     path("configuracion/toggle-usuario/", views.toggle_usuario_activo, name="toggle_usuario"),
+    
+    path("reportes/aprobar/", views.aprobar_horas_extra, name="aprobar_horas_extra"),
 
     
 

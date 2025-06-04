@@ -266,3 +266,44 @@ def detectar_turno(entrada, salida, grupo_nombre=None):
                 return turno
 
     return None
+
+
+# ========================
+# Turnos especiales (Turno 3)
+# ========================
+
+GRUPOS_TURNO_1 = [
+    'producción bogotá 2-bogotá avenida 68',
+    'producción bucaramanga 7-bucaramanga',
+    'producción cali 5-cali'
+]
+GRUPOS_TURNO_2 = GRUPOS_TURNO_1
+
+
+def agrupar_marcaciones_3(marcaciones):
+    bloques = []
+    i = 0
+    while i < len(marcaciones):
+        entrada = marcaciones[i].punch_time
+        for j in range(i + 1, len(marcaciones)):
+            salida = marcaciones[j].punch_time
+            diferencia = salida - entrada
+
+            dia_salida = salida.date()
+            dia_semana = salida.weekday()  # 0 = lunes, 6 = domingo
+            es_viernes_o_sabado = dia_semana in [4, 5]
+
+            if (
+                time(17, 0) <= entrada.time() <= time(22, 10) and
+                timedelta(hours=6) <= diferencia <= timedelta(hours=12) and
+                (
+                    (not es_viernes_o_sabado and time(5, 0) <= salida.time() <= time(8, 30)) or
+                    (es_viernes_o_sabado and salida.time() >= time(5, 0))
+                )
+            ):
+                bloques.append((entrada, salida))
+                i = j + 1
+                break
+        else:
+            i += 1
+    return bloques

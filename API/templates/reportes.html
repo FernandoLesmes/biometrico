@@ -183,14 +183,18 @@
                     <td>{{ r.recargo_nocturno_festivo }}</td>
                     <td>
                         {% if request.user.hremployee.emp_role.nombre|lower == "jefe de área" %}
-                            <button class="btn-aprobar" data-id="{{ r.id }}" data-tipo="lider">✔️ Lider</button>
-                            <button class="btn-aprobar" data-id="{{ r.id }}" data-tipo="jefe">✔️ supervisor</button>
+                            <input type="checkbox" class="btn-aprobar" data-id="{{ r.id }}" data-field="aprobado_supervisor" {% if r.aprobado_supervisor %}checked{% endif %}>
+                  
+                              <input type="checkbox" class="btn-aprobar" data-id="{{ r.id }}" data-field="aprobado_jefe_area" {% if r.aprobado_jefe_area %}checked{% endif %}>
                         {% elif request.user.hremployee.emp_role.nombre|lower == "supervisor" %}
-                            <button class="btn-aprobar" data-id="{{ r.id }}" data-tipo="lider">✔️ Lider</button>
+                            <input type="checkbox" class="btn-aprobar" data-id="{{ r.id }}" data-field="aprobado_supervisor" {% if r.aprobado_supervisor %}checked{% endif %}>
                         {% else %}
-                            {{ r.aprobado|yesno:"✅,❌" }}
+                            {{ r.aprobado_supervisor|yesno:"Supervisor: ✅,Supervisor: ❌" }}<br>
+                            {{ r.aprobado_jefe_area|yesno:"Jefe: ✅,Jefe: ❌" }}
                         {% endif %}
                     </td>
+                    
+                    
                 </tr>
                 {% endfor %}
             </tbody>
@@ -199,14 +203,9 @@
 
     <a href="{% url 'home' %}" class="btn">Volver al Inicio</a>
 
-
-
-    
-
         
 
-        
-
+    <script src="{% static 'js/aprobaciones.js' %}"></script>
 
 </body>
 </html>

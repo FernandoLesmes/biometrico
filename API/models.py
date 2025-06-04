@@ -218,6 +218,9 @@ class EmpleadoTurno(models.Model):
     # Aprobación y comentarios del líder/supervisor
     aprobado_por_lider = models.BooleanField(default=False)
     comentario = models.TextField(blank=True, null=True)
+    
+    aprobado_supervisor = models.BooleanField(default=False)
+    aprobado_jefe_area = models.BooleanField(default=False)
 
     # Control automático de registros
     created_at = models.DateTimeField(auto_now_add=True)
