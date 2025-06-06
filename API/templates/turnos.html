@@ -28,6 +28,12 @@
 
             <a href="{% url 'configuracion' %}" class="box {% if request.path == '/configuracion/' %}activo{% endif %}">Configuraciones</a>
         </div>
+
+        <div>
+            <a href="{% url 'exportar_excel_general' %}?tabla=turnos" class="btn btn-success">📥 Exportar Turnos</a>
+
+
+        </div>
     </header>
 
     <h1 class="titulo-turnos">Gestión de turnos</h1>

@@ -26,6 +26,11 @@
 
             <a href="{% url 'configuracion' %}" class="box {% if request.path == '/configuracion/' %}activo{% endif %}">Configuraciones</a>
         </div>
+
+        <div>
+            <a href="{% url 'exportar_excel_general' %}?tabla=grupos" class="btn btn-success">📥 Exportar Grupos</a>
+        </div>
+        
     </header>
 
     <h1 class="titulo-grupos">Gestión de Grupos</h1>

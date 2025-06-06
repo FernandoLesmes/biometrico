@@ -8,6 +8,7 @@ from .views import (
 )
 from API.views import ejecutar_procesamiento
 
+
 urlpatterns = [
     path('', views.home, name='home'),
 
@@ -58,7 +59,8 @@ urlpatterns = [
     
     path("reportes/aprobar/", views.aprobar_horas_extra, name="aprobar_horas_extra"),
 
-    
+    path("exportar_excel/", views.exportar_excel_general, name="exportar_excel_general"),
+
 
 ]
 

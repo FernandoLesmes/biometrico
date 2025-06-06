@@ -54,6 +54,10 @@ from django.db import transaction
 from django.contrib.auth import update_session_auth_hash
 
 
+
+from django.http import HttpResponse
+import openpyxl
+
 def parse_fecha(fecha_str):
     try:
         return datetime.strptime(fecha_str.strip().rstrip('-'), "%Y-%m-%d").date()
@@ -633,4 +637,138 @@ def aprobar_horas_extra(request):
             return JsonResponse({"success": False, "error": "Registro no encontrado"})
 
     return JsonResponse({"success": False, "error": "Método no permitido"}, status=405)
+
+
+
+import openpyxl
+from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
+from API.models import HrEmployee, HrGroup, AttShift, EmpJob, EmpCostCenter, EmpRole
+from API.utils.reportes import generar_reporte_basico, reporte_horas_extras
+from API.views import parse_fecha  # Asegúrate de tener esta función
+
+@login_required
+def exportar_excel_general(request):
+    tabla = request.GET.get("tabla")
+
+    # Diccionario de modelos permitidos
+    modelos = {
+        "empleados": HrEmployee,
+        "grupos": HrGroup,
+        "turnos": AttShift,
+        "cargos": EmpJob,
+        "centros": EmpCostCenter,
+        "roles": EmpRole,
+    }
+
+    # Caso especial: reportes
+    if tabla == "reportes":
+        tipo = request.GET.get("tipo", "basico")
+        cedula = request.GET.get("cedula", "")
+        apellidos = request.GET.get("apellidos", "")
+        grupos = request.GET.get("grupos", "")
+        desde = parse_fecha(request.GET.get("desde"))
+        hasta = parse_fecha(request.GET.get("hasta"))
+
+        filtros = {
+            "cedula": cedula,
+            "apellidos": apellidos,
+            "grupo": grupos,
+            "desde": desde,
+            "hasta": hasta,
+        }
+
+        datos = reporte_horas_extras(filtros) if tipo == "horas_extras" else generar_reporte_basico(filtros)
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = f"Reporte {tipo}"
+
+        if tipo == "basico":
+            headers = ["Cédula", "Apellido", "Nombre", "Grupo", "Fecha", "Turno"] + [f"Marca {i+1}" for i in range(8)]
+        else:
+            headers = [
+                "Cédula", "Apellido", "Nombre", "Grupo", "Fecha", "Turno", "Entrada", "Salida",
+                "HE Diurnas", "HE Nocturnas", "HE Festivo Diurno", "HE Festivo Nocturno",
+                "Recargo Nocturno", "Recargo N Festivo", "Aprobado Sup.", "Aprobado Jefe"
+            ]
+        ws.append(headers)
+
+        for r in datos:
+            if tipo == "basico":
+                fila = [r["cedula"], r["apellidos"], r["nombre"], r["grupo"], str(r["fecha"]), r["turno"]]
+                fila += [e.strftime("%H:%M") if e else "" for e in r["entradas_salidas"]]
+            else:
+                fila = [
+                    r["cedula"], r["apellidos"], r["nombre"], r["grupo"], str(r["fecha"]), r["turno"],
+                    r["entrada"], r["salida"],
+                    r["horas_extras_diurnas"], r["horas_extras_nocturnas"],
+                    r["horas_extras_festivas_diurnas"], r["horas_extras_festivas_nocturnas"],
+                    r["recargo_nocturno"], r["recargo_nocturno_festivo"],
+                    "✅" if r["aprobado_supervisor"] else "❌",
+                    "✅" if r["aprobado_jefe_area"] else "❌",
+                ]
+            ws.append(fila)
+
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = f'attachment; filename=reportes_{tipo}.xlsx'
+        wb.save(response)
+        return response
+
+    # 🔽 Exportar usuarios con acceso (configuración)
+    elif tabla == "configuracion":
+        empleados = HrEmployee.objects.filter(user__isnull=False).select_related('emp_role', 'user')
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Usuarios del Sistema"
+
+        headers = ["Nombre", "Apellido", "Cédula", "Rol", "Usuario", "Activo"]
+        ws.append(headers)
+
+        for emp in empleados:
+            fila = [
+                emp.emp_firstname,
+                emp.emp_lastname,
+                emp.emp_pin,
+                emp.emp_role.nombre,
+                emp.user.username if emp.user else "No asignado",
+                "Sí" if emp.user and emp.user.is_active else "No"
+            ]
+            ws.append(fila)
+
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=usuarios_configuracion.xlsx'
+        wb.save(response)
+        return response
+
+    # Validación si no está en el diccionario de modelos
+    if tabla not in modelos:
+        return HttpResponse("Tabla no válida", status=400)
+
+    # Exportar tablas normales
+    modelo = modelos[tabla]
+    queryset = modelo.objects.all()
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = f"{tabla.capitalize()}"
+
+    campos = [field.name for field in modelo._meta.fields]
+    ws.append(campos)
+
+    for obj in queryset:
+        fila = []
+        for campo in campos:
+            valor = getattr(obj, campo)
+            if hasattr(valor, "__str__") and not isinstance(valor, (int, float, str, bool)):
+                fila.append(str(valor))
+            else:
+                fila.append(valor)
+        ws.append(fila)
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename={tabla}.xlsx'
+    wb.save(response)
+    return response
 

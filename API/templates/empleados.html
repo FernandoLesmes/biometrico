@@ -30,6 +30,11 @@
 
             <a href="{% url 'configuracion' %}" class="box {% if request.path == '/configuracion/' %}activo{% endif %}">Configuraciones</a>
         </div>
+        <div>
+            <a href="{% url 'exportar_excel_general' %}?tabla=empleados" class="btn btn-success">📥 Exportar Empleados</a>
+
+
+        </div>
     </header>
 
     <h1 class="titulo-empleados">Gestión de Empleados</h1>

@@ -20,7 +20,9 @@
         <a href="{% url 'reportes_view' %}" class="box {% if request.path == '/reportes/' %}activo{% endif %}">Reportes</a>
 
         <a href="{% url 'configuracion' %}" class="box {% if request.path == '/configuracion/' %}activo{% endif %}">Configuraciones</a>
+
     </div>
+  
     </header>
 
     <h2 class="bienvenida">
@@ -29,6 +31,24 @@
     </h2>
 
     <h1 class="titulo-reportes">Gestión de asistencia</h1>
+
+
+    <!-- 🔽 Botón para descargar lo filtrado -->
+<form method="get" action="{% url 'exportar_excel_general' %}">
+    <input type="hidden" name="tabla" value="reportes"> 
+    <input type="hidden" name="tipo" value="{{ tipo }}">
+    <input type="hidden" name="cedula" value="{{ request.GET.cedula }}">
+    <input type="hidden" name="apellidos" value="{{ request.GET.apellidos }}">
+    <input type="hidden" name="grupos" value="{{ request.GET.grupos }}">
+    <input type="hidden" name="desde" value="{{ request.GET.desde }}">
+    <input type="hidden" name="hasta" value="{{ request.GET.hasta }}">
+    <button type="submit" class="btn btn-success">📥 Descargar Reporte en Excel</button>
+</form>
+
+
+
+
+
 
     <form method="get" action="{% url 'procesar_marcaciones' %}" class="procesar-form" onsubmit="mostrarCarga()">
         <button type="submit" class="btn-procesar">

@@ -23,6 +23,13 @@
 
         <a href="{% url 'configuracion' %}" class="box {% if request.path == '/configuracion/' %}activo{% endif %}">Configuraciones</a>
     </div>
+
+    <div>
+            <a href="{% url 'exportar_excel_general' %}?tabla=configuracion" class="btn btn-success">📥 Exportar Turnos</a>
+
+
+        </div>
+
     </header>
 
     <div class="cerrar-sesion-container">
