@@ -61,15 +61,8 @@ urlpatterns = [
 
     path("exportar_excel/", views.exportar_excel_general, name="exportar_excel_general"),
 
-
 ]
 
-
-    
-
-    
-
-   
 
     
 

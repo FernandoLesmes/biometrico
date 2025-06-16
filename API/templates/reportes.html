@@ -22,7 +22,11 @@
         <a href="{% url 'configuracion' %}" class="box {% if request.path == '/configuracion/' %}activo{% endif %}">Configuraciones</a>
 
     </div>
-  
+    
+    <div>
+    <button type="submit" class="btn btn-success">📥 Descargar Reporte en Excel</button>
+     </div>
+
     </header>
 
     <h2 class="bienvenida">
@@ -42,7 +46,7 @@
     <input type="hidden" name="grupos" value="{{ request.GET.grupos }}">
     <input type="hidden" name="desde" value="{{ request.GET.desde }}">
     <input type="hidden" name="hasta" value="{{ request.GET.hasta }}">
-    <button type="submit" class="btn btn-success">📥 Descargar Reporte en Excel</button>
+    
 </form>
 
 

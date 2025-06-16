@@ -331,6 +331,19 @@ select.cambiar-estado.inactivo {
 
 
 
+/* === BOTÓN EXPORTAR === */
+.btn-success {
+    background-color: #28a745;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.btn-success:hover {
+    background-color: #1c7c31;
+}
 
 
 

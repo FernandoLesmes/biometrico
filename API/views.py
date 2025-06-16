@@ -1,62 +1,34 @@
-from datetime import datetime
-from django.contrib import messages
-from django.contrib.auth import login
-from django.contrib.auth.forms import AuthenticationForm
-from django.db import transaction
-from django.http import JsonResponse
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views.decorators.csrf import csrf_exempt
+from datetime import datetime, timedelta
+import json
+import openpyxl
 
+from django.contrib import messages
+from django.contrib.auth import login, update_session_auth_hash
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from django.db import transaction
+from django.http import JsonResponse, HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.utils.timezone import make_aware
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 
 from .forms import ShiftForm, HrGroupForm
 from .models import (
     HrGroup, HrEmployee, AttShift, EmpleadoTurno,
-    EmpJob, EmpRole, EmpCostCenter, AttPunch
+    EmpJob, EmpRole, EmpCostCenter, AttPunch, GrupoSupervisor, PermisoRol
 )
 
+#from API.models import  HrEmployee, EmpRole, PermisoRol
+from API.utils.zk_helpers import registrar_en_biometrico
 from API.utils.turnos import detectar_turno
 from API.utils.reportes import (
     procesar_marcaciones, generar_reporte_basico, reporte_horas_extras
 )
-
-from API.utils.reportes import procesar_marcaciones
-from datetime import datetime
-from django.utils.timezone import make_aware
-from django.shortcuts import redirect
-
-from django.http import JsonResponse
-from .models import AttShift
-from django.views.decorators.csrf import csrf_exempt
-
-from django.http import JsonResponse
-from .models import AttShift
-
-from .models import HrEmployee 
-
-from API.models import EmpJob, EmpRole, EmpCostCenter
-from API.utils.zk_helpers import registrar_en_biometrico
-from .models import HrGroup, HrEmployee, GrupoSupervisor
-from django.views.decorators.http import require_POST
-from django.shortcuts import get_object_or_404, render
+from API.utils.permisos import tiene_permiso
 
 
-from .models import HrGroup, HrEmployee
-
-from datetime import datetime, timedelta
-from django.utils.timezone import make_aware
-
-
-from django.contrib.auth.models import User
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from API.models import HrEmployee, EmpRole
-from django.db import transaction
-from django.contrib.auth import update_session_auth_hash
-
-
-
-from django.http import HttpResponse
-import openpyxl
 
 def parse_fecha(fecha_str):
     try:
@@ -71,22 +43,58 @@ def home(request):
     return render(request, 'home.html')
 
 
+VISTAS_SISTEMA = ['empleados', 'turnos', 'grupos', 'reportes', 'configuraciones']
+
+
 def configuracion_view(request):
     if not hasattr(request.user, 'hremployee') or request.user.hremployee.emp_role.nombre != "Administrador":
         messages.error(request, "❌ No tienes permiso para ver esta sección.")
         return redirect("home")
 
-    # Filtrar empleados activos con roles válidos
     roles_validos = ["Administrador", "Supervisor", "Jefe de Área", "Líder HSE"]
     empleados = HrEmployee.objects.filter(emp_active=True, emp_role__nombre__in=roles_validos)
 
+    roles = EmpRole.objects.all()
+    vistas_sistema = ['empleados', 'turnos', 'grupos', 'reportes', 'configuraciones']
+
+    # === GUARDAR PERMISOS SOLO PARA LOS ROLES VISIBLES EN EL HTML ===
+    if request.method == "POST" and request.POST.get("guardar_permisos") == "1":
+        claves_checkbox = [k for k in request.POST if k.startswith("rol_")]
+
+        claves_recibidas = set()
+        for clave in claves_checkbox:
+            partes = clave.split("_")
+            if len(partes) == 3:
+                rol_id = int(partes[1])
+                vista = partes[2]
+                claves_recibidas.add((rol_id, vista))
+
+    # 🔄 Actualizar solo los permisos recibidos
+        for rol_id, vista in claves_recibidas:
+            permiso, creado = PermisoRol.objects.get_or_create(
+                rol_id=rol_id,
+                vista=vista,
+                defaults={'tiene_acceso': True}
+            )
+            if not creado and not permiso.tiene_acceso:
+                permiso.tiene_acceso = True
+                permiso.save()
+                
+               
+                
+
+    # ⛔ NO TOCAR otros permisos
+        messages.success(request, "✅ Permisos actualizados correctamente.")
+        return redirect("configuracion")
+
+
+    # === GUARDAR USUARIOS ===
     if request.method == "POST" and 'crear_usuario' in request.POST:
         usuario_id = request.POST.get("usuario_id")
         username = request.POST.get("username")
         password = request.POST.get("password")
         confirmar_password = request.POST.get("confirmar_password")
 
-        # Validaciones básicas
         if not all([usuario_id, username, password, confirmar_password]):
             messages.error(request, "❌ Todos los campos son obligatorios.")
             return redirect("configuracion")
@@ -97,25 +105,19 @@ def configuracion_view(request):
 
         try:
             empleado = HrEmployee.objects.get(id=usuario_id)
-
             if empleado.user:
-                # Actualizar usuario existente
                 empleado.user.username = username
                 empleado.user.set_password(password)
                 empleado.user.save()
-
-                # Si es el mismo usuario que está en sesión, mantener la sesión activa
                 if request.user == empleado.user:
                     update_session_auth_hash(request, empleado.user)
-                    messages.success(request, f"🔐 Tu usuario fue restablecido sin cerrar la sesión.")
+                    messages.success(request, "🔐 Tu usuario fue restablecido sin cerrar sesión.")
                 else:
                     messages.success(request, f"🔐 Usuario actualizado: {empleado.user.username}")
             else:
-                # Crear nuevo usuario si no existe
                 if User.objects.filter(username=username).exists():
-                    messages.error(request, f"⚠️ El nombre de usuario '{username}' ya está en uso.")
+                    messages.error(request, f"⚠️ El usuario '{username}' ya existe.")
                     return redirect("configuracion")
-
                 user = User.objects.create_user(
                     username=username,
                     password=password,
@@ -126,13 +128,27 @@ def configuracion_view(request):
                 empleado.user = user
                 empleado.save()
                 messages.success(request, f"✅ Usuario creado correctamente para {username}")
-
         except HrEmployee.DoesNotExist:
             messages.error(request, "❌ Empleado no encontrado.")
-
         return redirect("configuracion")
 
-    return render(request, "configuracion.html", {"empleados": empleados})
+    # === CARGAR PERMISOS ===
+    permisos_dict = {}
+    for rol in roles:
+        permisos = PermisoRol.objects.filter(rol_id=rol.id)
+        for permiso in permisos:
+            clave = f"rol_{rol.id}_{permiso.vista}"
+            permisos_dict[clave] = permiso.tiene_acceso
+
+    return render(request, "configuracion.html", {
+        "empleados": empleados,
+        "roles": roles,
+        "vistas": vistas_sistema,
+        "permisos": permisos_dict
+    })
+
+
+    
 
 
 
@@ -185,6 +201,11 @@ def logout_view(request):
     #return render(request, 'turnos.html', {'turnos': turnos})
 
 def lista_turnos(request):
+    
+    if not tiene_permiso(request.user, 'turnos'):
+        messages.error(request, "❌ No tienes permiso para ver esta vista.")
+        return redirect("home")
+    
     turnos = AttShift.objects.all().order_by('id')
     
     return render(request, 'turnos.html', {'turnos': turnos})
@@ -334,16 +355,17 @@ def asignar_roles_grupo(request, id):
 
 
 def grupos_view(request):
-    print("🚨 ENTRÓ A grupos_view") 
+   
+    if not tiene_permiso(request.user, 'grupos'):
+        messages.error(request, "❌ No tienes permiso para ver esta vista.")
+        return redirect("home")
+    
     grupos = HrGroup.objects.all()
 
     # ✅ Aquí filtras por roles correctos
     empleados_jefes = HrEmployee.objects.filter(emp_role__nombre__iexact="Jefe de Área", emp_active=True)
     empleados_supervisores = HrEmployee.objects.filter(emp_role__nombre__iexact="Supervisor", emp_active=True)
 
-    
-    print("Jefes encontrados:", empleados_jefes)  # DEBUG
-    print("Supervisores encontrados:", empleados_supervisores)  # DEBUG
 
     return render(request, "grupos.html", {
         "grupos": grupos,
@@ -356,9 +378,19 @@ def grupos_view(request):
 
 # ================== EMPLEADOS ==================
 def empleados_view(request):
+    
+    if not tiene_permiso(request.user, 'empleados'):
+        messages.error(request, "❌ No tienes permiso para ver esta vista.")
+        return redirect("home")
+    
     return render(request, 'empleados.html')
 
 def lista_empleados(request):
+    
+    if not tiene_permiso(request.user, 'empleados'):
+        messages.error(request, "❌ No tienes permiso para ver esta vista.")
+        return redirect("home")
+    
     context = {
         "empleados": HrEmployee.objects.all(),
         "grupos": HrGroup.objects.all(),
@@ -521,8 +553,14 @@ def reporte_turnos(request):
 
 
 
-from API.models import HrGroup, GrupoSupervisor  # asegúrate de tener esto
+ # asegúrate de tener esto
+from datetime import date, timedelta
+
 def reportes_view(request):
+    if not tiene_permiso(request.user, 'reportes'):
+        messages.error(request, "❌ No tienes permiso para ver esta vista.")
+        return redirect("home")
+
     tipo = request.GET.get("tipo", "basico")
     cedula = request.GET.get("cedula")
     apellidos = request.GET.get("apellidos")
@@ -530,12 +568,13 @@ def reportes_view(request):
     desde = request.GET.get("desde")
     hasta = request.GET.get("hasta")
 
-    fecha_inicio = parse_fecha(desde)
-    fecha_fin = parse_fecha(hasta)
+    # ✅ Si no hay fechas, se usan los últimos 3 días
+    fecha_inicio = parse_fecha(desde) if desde else date.today() - timedelta(days=3)
+    fecha_fin = parse_fecha(hasta) if hasta else date.today()
 
     filtros = {
         'apellidos': apellidos,
-        'grupo': None,  # Por defecto sin grupo
+        'grupo': None,
         'cedula': cedula,
         'desde': fecha_inicio,
         'hasta': fecha_fin,
@@ -549,7 +588,6 @@ def reportes_view(request):
 
         if rol in ['administrador', 'líder hse']:
             grupos_contexto = HrGroup.objects.all()
-            # 👇 Solo se filtra si el admin selecciona un grupo explícitamente
             if grupo:
                 try:
                     filtros['grupo'] = int(grupo)
@@ -573,7 +611,7 @@ def reportes_view(request):
             else:
                 return render(request, 'reportes.html', {'error': '❌ No tienes grupos asignados.'})
 
-    print("🔍 Filtros:", filtros)
+    print("🔍 Filtros usados:", filtros)
 
     datos = generar_reporte_basico(filtros) if tipo == 'basico' else reporte_horas_extras(filtros)
 
@@ -582,7 +620,6 @@ def reportes_view(request):
         'tipo': tipo,
         'grupos': grupos_contexto
     })
-
 
 
 
@@ -640,12 +677,7 @@ def aprobar_horas_extra(request):
 
 
 
-import openpyxl
-from django.http import HttpResponse
-from django.contrib.auth.decorators import login_required
-from API.models import HrEmployee, HrGroup, AttShift, EmpJob, EmpCostCenter, EmpRole
-from API.utils.reportes import generar_reporte_basico, reporte_horas_extras
-from API.views import parse_fecha  # Asegúrate de tener esta función
+ # Asegúrate de tener esta función
 
 @login_required
 def exportar_excel_general(request):
@@ -771,4 +803,11 @@ def exportar_excel_general(request):
     response['Content-Disposition'] = f'attachment; filename={tabla}.xlsx'
     wb.save(response)
     return response
+
+
+
+
+
+
+
 

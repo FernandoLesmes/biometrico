@@ -256,5 +256,12 @@ class AttPunch(models.Model):
 
     
     
-    
-    
+class PermisoRol(models.Model):
+    rol = models.ForeignKey('EmpRole', db_column='rol_id', on_delete=models.CASCADE)
+    vista = models.CharField(max_length=50)
+    tiene_acceso = models.BooleanField(default=False)
+
+    class Meta:
+        managed = False  # 👈 Esto le dice a Django que la tabla ya existe
+        db_table = 'permiso_rol'
+

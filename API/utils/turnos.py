@@ -183,7 +183,7 @@ TURNOS = {
     8: {
         "nombre": "Turno 8",
         "hora_entrada_min": time(6, 0),
-        "hora_entrada_max": time(7, 10),
+        "hora_entrada_max": time(7, 30),
         "hora_salida": time(17, 0),
         "horas_turno": 9,
         "autoriza_extra": False,
