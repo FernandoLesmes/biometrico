@@ -46,3 +46,31 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("formAsignarRoles");
+
+    if (form) {
+        form.addEventListener("submit", function (e) {
+            const jefeSelect = document.getElementById("selectJefe");
+            const supervisoresSelect = document.getElementById("selectSupervisores");
+
+            // ✅ Forzar jefe vacío si no hay valor seleccionado
+            if (!jefeSelect.value) {
+                const inputJefe = document.createElement("input");
+                inputJefe.type = "hidden";
+                inputJefe.name = "jefe_planta";
+                inputJefe.value = "";
+                form.appendChild(inputJefe);
+            }
+
+            // ✅ Forzar supervisores vacío si ninguno está seleccionado
+            if (supervisoresSelect.selectedOptions.length === 0) {
+                const inputSupervisores = document.createElement("input");
+                inputSupervisores.type = "hidden";
+                inputSupervisores.name = "supervisores";
+                inputSupervisores.value = "";
+                form.appendChild(inputSupervisores);
+            }
+        });
+    }
+});

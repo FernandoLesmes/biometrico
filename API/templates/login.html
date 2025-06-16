@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     {% load static %}
     <title>Iniciar sesión</title>
+    <link rel="icon" href="{% static 'img/favicon-32x32.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'css/login.css' %}">
 </head>
 <body>
@@ -16,7 +17,7 @@
     {% endif %}
 
     <header>
-        <img src="{% static 'img/logo.png' %}" alt="Logo" class="header-img">
+        
     </header>
 
     <!-- Solo muestra el mensaje de bienvenida si el usuario está autenticado -->
@@ -25,6 +26,9 @@
     {% endif %}
 
     <div class="login-container">
+
+        <img src="{% static 'img/logo.png' %}" alt="Logo" class="header-img">
+
         <h2>Iniciar sesión</h2>
         <form method="post">
             {% csrf_token %}

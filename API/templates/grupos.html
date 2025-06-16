@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Grupos</title>
-
+    <link rel="icon" href="{% static 'img/favicon-32x32.png' %}" type="image/png">
     <!-- CSS personalizado -->
     <link rel="stylesheet" href="{% static 'css/grupos.css' %}">
 
@@ -94,7 +94,7 @@
 
             <label><strong>Asignar Jefe de Planta:</strong></label>
             <select id="selectJefe" name="jefe_planta">
-                <option value="">Seleccione</option>
+                <option value="">-- Ninguno --</option>
                 {% for jefe in empleados_jefes %}
                     <option value="{{ jefe.id }}">{{ jefe.emp_firstname }} {{ jefe.emp_lastname }}</option>
                 {% endfor %}
@@ -102,6 +102,7 @@
 
             <label><strong>Asignar Supervisores:</strong></label>
             <select id="selectSupervisores" name="supervisores" multiple size="5">
+                <option value="">-- Ninguno --</option>
                 {% for sup in empleados_supervisores %}
                     <option value="{{ sup.id }}">{{ sup.emp_firstname }} {{ sup.emp_lastname }}</option>
                 {% endfor %}

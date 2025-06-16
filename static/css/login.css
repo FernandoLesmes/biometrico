@@ -8,31 +8,39 @@
 /* Body styles */
 body {
     font-family: Arial, sans-serif;
-    background-color: #e1f5fe; /* Fondo azul claro */
+
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
     margin: 0;
+
+    background: url('../img/fondo_login.jpg') no-repeat center center fixed;
+    background-size: cover;
+
+
 }
 
 /* Login container */
 .login-container {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
+
     width: 100%;
-    max-width: 400px;
-    height: 400px; /* Ajusta la altura para que el cuadro no quede muy grande */
+    max-width: 500px;     /* más ancho */
+    min-height: 480px;    /* más alto */
+    
     background-color: #fff;
-    padding: 40px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
+    padding: 50px 40px;   /* más espacio interno */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
     text-align: center;
-    border: 2px solid #3498db; /* Borde azul alrededor */
+    border: 2px solid #3498db;
     box-sizing: border-box;
 }
+
 
 /* Heading styling */
 h2 {
@@ -109,3 +117,9 @@ input[type="password"]:focus {
     margin-bottom: 15px;
 }
 
+.login-logo {
+    width: 120px;
+    height: auto;
+    margin-bottom: 20px;
+    margin-top: 10px;
+}

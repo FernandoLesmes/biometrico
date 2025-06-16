@@ -126,3 +126,8 @@ LOGIN_URL = '/login/'  # Redirige al login si el usuario no está autenticado
 
 
 pymysql.install_as_MySQLdb()
+
+# Cierra sesión automáticamente después de 15 minutos de inactividad
+SESSION_COOKIE_AGE = 600  # 900 segundos = 15 minutos
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_SAVE_EVERY_REQUEST = False

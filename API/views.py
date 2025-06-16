@@ -332,26 +332,34 @@ def detalle_grupo(request, id):
 def asignar_roles_grupo(request, id):
     grupo = get_object_or_404(HrGroup, id=id)
 
-    jefe_id = request.POST.get('jefe_planta')
+    jefe_id = request.POST.get('jefe_planta', None)
     supervisores_ids = request.POST.getlist('supervisores')
 
-    # Verifica y asigna el jefe de planta
-    if jefe_id:
-        jefe = HrEmployee.objects.get(id=jefe_id)
-        if jefe.emp_role.nombre.lower() == "jefe de área":  # ¡CORREGIDO!
-            grupo.jefe_planta = jefe
-            grupo.save()
+    # ✅ Verifica y asigna o elimina jefe de planta
+    if jefe_id != "":
+        if jefe_id:
+            jefe = HrEmployee.objects.get(id=jefe_id)
+            if jefe.emp_role.nombre.lower() == "jefe de área":
+                grupo.jefe_planta = jefe
+            else:
+                return JsonResponse({'error': 'El empleado seleccionado no tiene el rol de jefe de área'}, status=400)
         else:
-            return JsonResponse({'error': 'El empleado seleccionado no tiene el rol de jefe de área'}, status=400)
+            grupo.jefe_planta = None
+        grupo.save()
 
-    # Reemplaza los supervisores actuales por los nuevos
-    GrupoSupervisor.objects.filter(grupo=grupo).delete()
-    for sup_id in supervisores_ids:
-        supervisor = HrEmployee.objects.get(id=sup_id)
-        if supervisor.emp_role.nombre.lower() == "supervisor":
-            GrupoSupervisor.objects.create(grupo=grupo, supervisor=supervisor)
+    # ✅ Verifica si se envió el campo 'supervisores' en el formulario
+    if 'supervisores' in request.POST:
+        GrupoSupervisor.objects.filter(grupo=grupo).delete()
+        for sup_id in supervisores_ids:
+            if sup_id.strip():  # evita errores por IDs vacíos
+                supervisor = HrEmployee.objects.get(id=sup_id)
+                if supervisor.emp_role.nombre.lower() == "supervisor":
+                    GrupoSupervisor.objects.create(grupo=grupo, supervisor=supervisor)
 
     return JsonResponse({'success': True})
+
+
+
 
 
 def grupos_view(request):
