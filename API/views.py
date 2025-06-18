@@ -622,6 +622,8 @@ def reportes_view(request):
     print("🔍 Filtros usados:", filtros)
 
     datos = generar_reporte_basico(filtros) if tipo == 'basico' else reporte_horas_extras(filtros)
+    datos = sorted(datos, key=lambda r: (r["apellidos"].lower(), r["fecha"]))
+
 
     return render(request, 'reportes.html', {
         'datos': datos,
@@ -701,7 +703,7 @@ def exportar_excel_general(request):
         "roles": EmpRole,
     }
 
-    # Caso especial: reportes
+    # 🟡 Caso especial: Reportes (básico y horas extras)
     if tabla == "reportes":
         tipo = request.GET.get("tipo", "basico")
         cedula = request.GET.get("cedula", "")
@@ -719,7 +721,8 @@ def exportar_excel_general(request):
         }
 
         datos = reporte_horas_extras(filtros) if tipo == "horas_extras" else generar_reporte_basico(filtros)
-
+        datos = sorted(datos, key=lambda r: (r["apellidos"].lower(), r["fecha"]))
+        
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = f"Reporte {tipo}"
@@ -755,7 +758,7 @@ def exportar_excel_general(request):
         wb.save(response)
         return response
 
-    # 🔽 Exportar usuarios con acceso (configuración)
+    # 🟡 Caso especial: Usuarios con acceso
     elif tabla == "configuracion":
         empleados = HrEmployee.objects.filter(user__isnull=False).select_related('emp_role', 'user')
 
@@ -771,7 +774,7 @@ def exportar_excel_general(request):
                 emp.emp_firstname,
                 emp.emp_lastname,
                 emp.emp_pin,
-                emp.emp_role.nombre,
+                emp.emp_role.nombre if emp.emp_role else "Sin rol",
                 emp.user.username if emp.user else "No asignado",
                 "Sí" if emp.user and emp.user.is_active else "No"
             ]
@@ -782,11 +785,41 @@ def exportar_excel_general(request):
         wb.save(response)
         return response
 
-    # Validación si no está en el diccionario de modelos
+    # 🟡 Caso especial: Empleados (manejo personalizado por campos relacionados)
+    elif tabla == "empleados":
+        empleados = HrEmployee.objects.all().select_related('emp_job', 'emp_group', 'emp_role', 'emp_cost_center')
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Empleados"
+
+        headers = ["Cédula", "Nombre", "Apellido", "Cargo", "Grupo", "Rol", "Centro de Costo", "Correo", "Activo"]
+        ws.append(headers)
+
+        for emp in empleados:
+            fila = [
+                emp.emp_pin,
+                emp.emp_firstname,
+                emp.emp_lastname,
+                emp.emp_job.nombre if emp.emp_job else "Sin cargo",
+                emp.emp_group.nombre if emp.emp_group else "Sin grupo",
+                emp.emp_role.nombre if emp.emp_role else "Sin rol",
+                emp.emp_cost_center.nombre if emp.emp_cost_center else "Sin centro",
+                emp.emp_email,
+                "Sí" if emp.emp_active else "No"
+            ]
+            ws.append(fila)
+
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=empleados.xlsx'
+        wb.save(response)
+        return response
+
+    # 🟥 Validación si no está en el diccionario de modelos
     if tabla not in modelos:
         return HttpResponse("Tabla no válida", status=400)
 
-    # Exportar tablas normales
+    # 🟢 Exportación general para otras tablas
     modelo = modelos[tabla]
     queryset = modelo.objects.all()
 
