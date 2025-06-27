@@ -1,24 +1,36 @@
 body {
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding-top: 90px; /* espacio para el header fijo */
 }
 
+/* ========= HEADER FIJO ========= */
 header {
-    background-color: #fff;
-    padding: 10px 40px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    background-color: #f2f1f8;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    border-bottom: 1px solid #ccc;
+    padding: 15px 30px;
+    box-sizing: border-box;
 }
 
+/* ========= LOGO ========= */
 .header-img {
     height: 45px;
 }
 
+/* ========= MENÚ NAV ========= */
 .grid-container {
     display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1; /* ocupa espacio entre logo y botón */
     gap: 30px;
 }
 
@@ -35,6 +47,38 @@ header {
     color: #007bff;
     border-bottom: 2px solid #007bff;
 }
+
+.grid-container .activo {
+    color: #007bff;
+    border-bottom: 2px solid #007bff;
+}
+
+/* ========= BOTÓN CERRAR SESIÓN ========= */
+.header-right {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.btn-cerrar-sesion {
+    background-color: #ff5e5e;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+}
+
+.btn-cerrar-sesion:hover {
+    background-color: #d73c3c;
+}
+
+
+  
+
+
 
 
 

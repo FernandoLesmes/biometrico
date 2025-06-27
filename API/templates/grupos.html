@@ -14,26 +14,35 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 </head>
-<body>
-    <header>
+ <header>
+    <!-- Columna izquierda -->
+    <div class="header-left">
         <img src="{% static 'img/logo.png' %}" alt="Logo" class="header-img">
-        <div class="grid-container">
-            <a href="{% url 'turnos' %}" class="box {% if request.path == '/turnos/' %}activo{% endif %}">Turnos</a>
-            <a href="{% url 'empleados' %}" class="box {% if request.path == '/empleados/' %}activo{% endif %}">Empleados</a>
-            <a href="{% url 'grupos' %}" class="box {% if request.path == '/grupos/' %}activo{% endif %}">Grupos</a>
+    </div>
 
-            <a href="{% url 'reportes_view' %}" class="box {% if request.path == '/reportes/' %}activo{% endif %}">Reportes</a>
+    <!-- Columna centro -->
+    <div class="grid-container">
+        <a href="{% url 'turnos' %}" class="box {% if request.path == '/turnos/' %}activo{% endif %}">Turnos</a>
+        <a href="{% url 'empleados' %}" class="box {% if request.path == '/empleados/' %}activo{% endif %}">Empleados</a>
+        <a href="{% url 'grupos' %}" class="box {% if request.path == '/grupos/' %}activo{% endif %}">Grupos</a>
+        <a href="{% url 'reportes_view' %}" class="box {% if request.path == '/reportes/' %}activo{% endif %}">Reportes</a>
+        <a href="{% url 'configuracion' %}" class="box {% if request.path == '/configuracion/' %}activo{% endif %}">Configuraciones</a>
+    </div>
 
-            <a href="{% url 'configuracion' %}" class="box {% if request.path == '/configuracion/' %}activo{% endif %}">Configuraciones</a>
-        </div>
-
-        <div>
-            <a href="{% url 'exportar_excel_general' %}?tabla=grupos" class="btn btn-success">📥 Exportar Grupos</a>
-        </div>
-        
-    </header>
+    <!-- Columna derecha -->
+    <div class="header-right">
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-cerrar-sesion">Cerrar sesión</button>
+        </form>
+    </div>
+</header>
 
     <h1 class="titulo-grupos">Gestión de Grupos</h1>
+
+    <div>
+            <a href="{% url 'exportar_excel_general' %}?tabla=grupos" class="btn btn-success">📥 Exportar Grupos</a>
+    </div>
 
     <button id="crearGrupoBtn" class="btn-crear">Crear Grupo</button>
 

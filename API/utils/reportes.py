@@ -1,6 +1,8 @@
 from collections import defaultdict
 from datetime import datetime, timedelta, time
 from django.db import transaction
+from django.db.models import Q
+
 from django.shortcuts import render
 
 from API.models import HrEmployee, HrGroup, AttPunch, EmpleadoTurno, AttShift
@@ -32,11 +34,20 @@ def generar_reporte_basico(filtros):
     datos = []
     punches = AttPunch.objects.select_related('employee').order_by('punch_time')
 
-    if filtros.get('cedula'):
-        punches = punches.filter(employee__emp_pin__icontains=filtros['cedula'])
+    
+    if filtros.get("buscar"):
+        q = filtros["buscar"]
+        punches = punches.filter(
+            Q(employee__emp_pin__icontains=q) |
+            Q(employee__emp_lastname__icontains=q)
+        )
 
-    if filtros.get("apellidos"):
-        punches = punches.filter(employee__emp_lastname__icontains=filtros["apellidos"])
+    
+    #if filtros.get('cedula'):
+        #punches = punches.filter(employee__emp_pin__icontains=filtros['cedula'])
+
+    #if filtros.get("apellidos"):
+        #punches = punches.filter(employee__emp_lastname__icontains=filtros["apellidos"])
 
     if filtros.get("grupo"):
         punches = punches.filter(employee__emp_group_id=filtros["grupo"])
@@ -87,11 +98,18 @@ def reporte_horas_extras(filtros):
     datos = []
     registros = EmpleadoTurno.objects.select_related('empleado', 'turno', 'empleado__emp_group')
 
-    if filtros.get('cedula'):
-        registros = registros.filter(empleado__emp_pin__icontains=filtros['cedula'])
+    #if filtros.get('cedula'):
+        #registros = registros.filter(empleado__emp_pin__icontains=filtros['cedula'])
 
-    if filtros.get('apellidos'):
-        registros = registros.filter(empleado__emp_lastname__icontains=filtros['apellidos'])
+    #if filtros.get('apellidos'):
+        #registros = registros.filter(empleado__emp_lastname__icontains=filtros['apellidos'])
+        
+    if filtros.get("buscar"):
+        q = filtros["buscar"]
+        registros = registros.filter(
+            Q(empleado__emp_pin__icontains=q) |
+            Q(empleado__emp_lastname__icontains=q)
+        )   
 
     if filtros.get('grupo'):
         registros = registros.filter(empleado__emp_group_id=filtros['grupo'])

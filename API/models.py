@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.timezone import now
 
 class AcGroup(models.Model):
     id = models.AutoField(primary_key=True)
@@ -265,3 +266,30 @@ class PermisoRol(models.Model):
         managed = False  # 👈 Esto le dice a Django que la tabla ya existe
         db_table = 'permiso_rol'
 
+   
+class AprobacionHorasExtras(models.Model):
+        turno = models.OneToOneField("EmpleadoTurno", on_delete=models.CASCADE)
+
+        aprobado_supervisor = models.BooleanField(default=False)
+        aprobado_jefe_area = models.BooleanField(default=False)
+
+        supervisor_aprobo = models.ForeignKey(
+            "HrEmployee", null=True, blank=True, on_delete=models.SET_NULL,
+            related_name="supervisor_aprobaciones"
+        )
+        jefe_aprobo = models.ForeignKey(
+            "HrEmployee", null=True, blank=True, on_delete=models.SET_NULL,
+            related_name="jefe_aprobaciones"
+        )
+
+        fecha_aprobacion_supervisor = models.DateTimeField(null=True, blank=True)
+        fecha_aprobacion_jefe = models.DateTimeField(null=True, blank=True)
+
+        bloqueado_para_pago = models.BooleanField(default=False)
+
+        class Meta:
+            verbose_name = "Historial Aprobación de Horas Extras"
+            verbose_name_plural = "Historial Aprobación de Horas Extras"
+
+        def __str__(self):
+            return f"{self.turno.empleado.emp_firstname} - {self.turno.fecha}"

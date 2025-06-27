@@ -4,9 +4,10 @@ from . import views
 from .views import (
     crear_grupo, lista_grupos, obtener_grupos,
     lista_empleados, crear_empleado,
-    reportes_view
+    reportes_view, reporte_horas_extras,aprobar_horas_extra,
 )
 from API.views import ejecutar_procesamiento
+from API.views import historial_horas_extras_ajax
 
 
 urlpatterns = [
@@ -19,7 +20,7 @@ urlpatterns = [
     # Vista principal de grupos (solo una)
     path('grupos/', views.grupos_view, name='grupos'),
 
-    # Rutas auxiliares para otras vistas relacionadas a grupos
+    # Rutas auxiliares para otras vistas relacionadas a gruposA
     path('grupos/asistencia/', views.asistencia_view, name='asistencia_view'),
     path('grupos/listado/', lista_grupos, name='lista_grupos'),
 
@@ -60,6 +61,10 @@ urlpatterns = [
     path("reportes/aprobar/", views.aprobar_horas_extra, name="aprobar_horas_extra"),
 
     path("exportar_excel/", views.exportar_excel_general, name="exportar_excel_general"),
+    
+    path("historial-horas-extras/ajax/", historial_horas_extras_ajax, name="historial_horas_extras_ajax"),
+    
+    
 
 ]
 

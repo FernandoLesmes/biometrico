@@ -12,51 +12,47 @@
     {% load static %}
     
     <header>
+    <!-- Columna izquierda -->
+    <div class="header-left">
         <img src="{% static 'img/logo.png' %}" alt="Logo" class="header-img">
+    </div>
 
+    <!-- Columna centro -->
     <div class="grid-container">
         <a href="{% url 'turnos' %}" class="box {% if request.path == '/turnos/' %}activo{% endif %}">Turnos</a>
         <a href="{% url 'empleados' %}" class="box {% if request.path == '/empleados/' %}activo{% endif %}">Empleados</a>
         <a href="{% url 'grupos' %}" class="box {% if request.path == '/grupos/' %}activo{% endif %}">Grupos</a>
-        
         <a href="{% url 'reportes_view' %}" class="box {% if request.path == '/reportes/' %}activo{% endif %}">Reportes</a>
-
         <a href="{% url 'configuracion' %}" class="box {% if request.path == '/configuracion/' %}activo{% endif %}">Configuraciones</a>
-
     </div>
-    
-    
 
-    <form method="get" action="{% url 'exportar_excel_general' %}">
-    <input type="hidden" name="tabla" value="reportes"> 
-    <input type="hidden" name="tipo" value="{{ tipo }}">
-    <input type="hidden" name="cedula" value="{{ request.GET.cedula }}">
-    <input type="hidden" name="apellidos" value="{{ request.GET.apellidos }}">
-    <input type="hidden" name="grupos" value="{{ request.GET.grupos }}">
-    <input type="hidden" name="desde" value="{{ request.GET.desde }}">
-    <input type="hidden" name="hasta" value="{{ request.GET.hasta }}">
+    <!-- Columna derecha -->
+    <div class="header-right">
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-cerrar-sesion">Cerrar sesión</button>
+        </form>
+    </div>
+</header>
+
     
-    <button type="submit" class="btn btn-success">📥 Descargar Reporte en Excel</button>
-    
-    </form>
-
-    </header>
-
-    <h2 class="bienvenida">
-        👋 Bienvenido, <span class="usuario">{{ user.username }}</span><br>
-        <span class="subtitulo">Sistema de gestión de turnos y control de ingresos y salidas</span>
-    </h2>
-
+   
     <h1 class="titulo-reportes">Gestión de asistencia</h1>
 
+     <form method="get" action="{% url 'exportar_excel_general' %}">
+            <input type="hidden" name="tabla" value="reportes"> 
+            <input type="hidden" name="tipo" value="{{ tipo }}">
+            <!--<input type="hidden" name="cedula" value="{{ request.GET.cedula }}">
+            <input type="hidden" name="apellidos" value="{{ request.GET.apellidos }}"> -->
+            <input type="hidden" name="buscar" value="{{ request.GET.buscar }}">
+            <input type="hidden" name="grupos" value="{{ request.GET.grupos }}">
+            <input type="hidden" name="desde" value="{{ request.GET.desde }}">
+            <input type="hidden" name="hasta" value="{{ request.GET.hasta }}">
+            <button type="submit" class="btn btn-success">📥 Descargar Reporte en Excel</button>
+        </form>
 
+   
     <!-- 🔽 Botón para descargar lo filtrado -->
-
-
-
-
-
-
 
     <form method="get" action="{% url 'procesar_marcaciones' %}" class="procesar-form" onsubmit="mostrarCarga()">
         <button type="submit" class="btn-procesar">
@@ -69,10 +65,11 @@
         <span class="mensaje-cargando">Procesando marcaciones...</span>
     </div>
     
-    
+    <button id="btn-ver-historial" class="btn btn-success">Ver historial de horas extras</button>
 
     <form method="get" class="formulario-filtros">
         <fieldset class="filtros-grid">
+
             <div class="campo">
                 <label for="tipo">Tipo de Reporte:</label>
                 <select name="tipo" id="tipo" onchange="this.form.submit()">
@@ -82,13 +79,8 @@
             </div>
     
             <div class="campo">
-                <label>Cédula:</label>
-                <input type="text" name="cedula" value="{{ request.GET.cedula }}">
-            </div>
-    
-            <div class="campo">
-                <label>Apellido:</label>
-                <input type="text" name="apellidos" value="{{ request.GET.apellidos }}">
+                <label>Buscar por Cédula o Apellido</label>
+                <input type="text" name="buscar" value="{{ request.GET.buscar }}">
             </div>
             
 
@@ -231,7 +223,49 @@
 
     <a href="{% url 'home' %}" class="btn">Volver al Inicio</a>
 
+<!-- Botón para mostrar el historial -->
+
+
+<!-- Modal vacío para llenar con JS -->
+<div id="modal-historial" class="modal" style="display: none;">
+  <div class="modal-content">
+    <span id="cerrar-modal" class="close">&times;</span>
+    <h2>Historial de horas extras aprobadas</h2>
+    <table id="tabla-historial">
+      <thead>
+        <tr>
+          <th>Cédula</th>
+          <th>Apellidos</th>
+          <th>Nombre</th>
+          <th>Grupo</th>
+          <th>Fecha</th>
+          <th>Turno</th>
+          <th>Entrada</th>
+          <th>Salida</th>
+          <th>Extras Día</th>
+          <th>Extras Noche</th>
+          <th>Fest. Día</th>
+          <th>Fest. Noche</th>
+          <th>Rec. Noche</th>
+          <th>Rec. Noche Fest.</th>
+          <th>Supervisor</th>
+          <th>Jefe</th>
+          <th>Bloqueado</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+      <button id="btn-guardar-cambios" class="btn btn-success">💾 Guardar Cambios</button>
+
+    </table>
+  </div>
+</div>
+
+
+
+
         
+    <script src="{% static 'js/historial_aprobadas.js' %}"></script>
+
 
     <script src="{% static 'js/aprobaciones.js' %}"></script>
     <script src="{% static 'js/limpiar_filtros.js' %}"></script>

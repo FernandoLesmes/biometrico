@@ -27,8 +27,9 @@ from API.utils.reportes import (
     procesar_marcaciones, generar_reporte_basico, reporte_horas_extras
 )
 from API.utils.permisos import tiene_permiso
+from django.utils.timezone import now
 
-
+from .models import AprobacionHorasExtras
 
 def parse_fecha(fecha_str):
     try:
@@ -570,8 +571,7 @@ def reportes_view(request):
         return redirect("home")
 
     tipo = request.GET.get("tipo", "basico")
-    cedula = request.GET.get("cedula")
-    apellidos = request.GET.get("apellidos")
+    buscar = request.GET.get("buscar", "").strip()  # nuevo campo combinado
     grupo = request.GET.get("grupo")
     desde = request.GET.get("desde")
     hasta = request.GET.get("hasta")
@@ -581,9 +581,8 @@ def reportes_view(request):
     fecha_fin = parse_fecha(hasta) if hasta else date.today()
 
     filtros = {
-        'apellidos': apellidos,
+        'buscar': buscar,
         'grupo': None,
-        'cedula': cedula,
         'desde': fecha_inicio,
         'hasta': fecha_fin,
     }
@@ -621,9 +620,16 @@ def reportes_view(request):
 
     print("🔍 Filtros usados:", filtros)
 
+    # ✅ Llama a la función correspondiente
     datos = generar_reporte_basico(filtros) if tipo == 'basico' else reporte_horas_extras(filtros)
-    datos = sorted(datos, key=lambda r: (r["apellidos"].lower(), r["fecha"]))
 
+    # ✅ Aplica el filtro de búsqueda si hay datos y texto en buscar
+    if buscar:
+        datos = [r for r in datos if
+                 buscar.lower() in str(r["cedula"]).lower() or
+                 buscar.lower() in r["apellidos"].lower()]
+
+    datos = sorted(datos, key=lambda r: (r["apellidos"].lower(), r["fecha"]))
 
     return render(request, 'reportes.html', {
         'datos': datos,
@@ -648,12 +654,8 @@ def ejecutar_procesamiento(request):
 
     return redirect('reportes_view')  # 👈 asegúrate que el name en urls.py sea correcto
 
-
-
 @csrf_exempt
 def aprobar_horas_extra(request):
-    import json
-
     if request.method == "POST":
         data = json.loads(request.body)
         turno_id = data.get("id")
@@ -662,28 +664,54 @@ def aprobar_horas_extra(request):
 
         try:
             turno = EmpleadoTurno.objects.get(id=turno_id)
+            empleado_actual = request.user.hremployee
+            rol = empleado_actual.emp_role.nombre.lower()
 
-            if field == "aprobado_supervisor":
-                if request.user.hremployee.emp_role.nombre.lower() not in ["supervisor", "jefe de área"]:
-                    return JsonResponse({"success": False, "error": "No autorizado."})
-                turno.aprobado_supervisor = value
-
-
-            elif field == "aprobado_jefe_area":
-                if request.user.hremployee.emp_role.nombre.lower() != "jefe de área":
-                    return JsonResponse({"success": False, "error": "No autorizado."})
-                turno.aprobado_jefe_area = value
-
-            else:
+            if field not in ["aprobado_supervisor", "aprobado_jefe_area"]:
                 return JsonResponse({"success": False, "error": "Campo no válido"})
 
+            # Obtener o crear aprobación
+            aprobacion, _ = AprobacionHorasExtras.objects.get_or_create(turno=turno)
+
+            # 🔒 Si ya está aprobado por ambos, no permitir cambios
+            if aprobacion.aprobado_supervisor and aprobacion.aprobado_jefe_area:
+                return JsonResponse({"success": False, "error": "❌ Ya fue aprobado por ambos. No se puede modificar."})
+
+            # 🔒 Si el jefe ya aprobó, el supervisor NO puede desmarcar
+            if rol == "supervisor" and field == "aprobado_supervisor" and not value and aprobacion.aprobado_jefe_area:
+                return JsonResponse({"success": False, "error": "❌ No puedes desmarcar. Ya fue aprobado por el jefe."})
+
+            # ✅ Actualizar campo en EmpleadoTurno
+            setattr(turno, field, value)
             turno.save()
+
+            # ✅ Registrar datos en AprobacionHorasExtras
+            if field == "aprobado_supervisor" and rol in ["supervisor", "jefe de área"]:
+                aprobacion.aprobado_supervisor = value
+                aprobacion.supervisor_aprobo = empleado_actual
+                aprobacion.fecha_aprobacion_supervisor = now()
+
+            elif field == "aprobado_jefe_area" and rol == "jefe de área":
+                aprobacion.aprobado_jefe_area = value
+                aprobacion.jefe_aprobo = empleado_actual
+                aprobacion.fecha_aprobacion_jefe = now()
+
+            # 🔒 Si ambos marcaron, bloquear para pago
+            if aprobacion.aprobado_supervisor and aprobacion.aprobado_jefe_area:
+                aprobacion.bloqueado_para_pago = True
+
+            aprobacion.save()
+
             return JsonResponse({"success": True})
 
         except EmpleadoTurno.DoesNotExist:
-            return JsonResponse({"success": False, "error": "Registro no encontrado"})
+            return JsonResponse({"success": False, "error": "❌ Registro no encontrado"})
 
-    return JsonResponse({"success": False, "error": "Método no permitido"}, status=405)
+    return JsonResponse({"success": False, "error": "❌ Método no permitido"}, status=405)
+
+
+
+
 
 
 
@@ -706,15 +734,17 @@ def exportar_excel_general(request):
     # 🟡 Caso especial: Reportes (básico y horas extras)
     if tabla == "reportes":
         tipo = request.GET.get("tipo", "basico")
-        cedula = request.GET.get("cedula", "")
-        apellidos = request.GET.get("apellidos", "")
+        #cedula = request.GET.get("cedula", "")
+        #apellidos = request.GET.get("apellidos", "")
+        buscar = request.GET.get("buscar", "").strip()
         grupos = request.GET.get("grupos", "")
         desde = parse_fecha(request.GET.get("desde"))
         hasta = parse_fecha(request.GET.get("hasta"))
 
         filtros = {
-            "cedula": cedula,
-            "apellidos": apellidos,
+            "buscar": buscar,
+            #"cedula": cedula,
+            #"apellidos": apellidos,
             "grupo": grupos,
             "desde": desde,
             "hasta": hasta,
@@ -846,6 +876,121 @@ def exportar_excel_general(request):
     return response
 
 
+
+
+def historial_horas_extras_ajax(request):
+    aprobaciones = AprobacionHorasExtras.objects.select_related(
+        'turno', 'turno__empleado', 'turno__empleado__emp_group',
+         'supervisor_aprobo', 'jefe_aprobo'
+    ).filter(
+        aprobado_supervisor=True,
+        aprobado_jefe_area=True,
+        #bloqueado_para_pago=False
+    ).order_by('turno__empleado__emp_lastname', 'turno__fecha')
+
+    datos = []
+    for a in aprobaciones:
+        t = a.turno
+        datos.append({
+            "cedula": t.empleado.emp_pin,
+            "apellidos": t.empleado.emp_lastname,
+            "nombre": t.empleado.emp_firstname,
+            "grupo": t.empleado.emp_group.nombre if t.empleado.emp_group else "",
+            "fecha": str(t.fecha),
+            "turno": t.turno.shift_name if t.turno else "",
+
+            "entrada": t.hora_entrada.strftime("%H:%M") if t.hora_entrada else "",
+            "salida": t.hora_salida.strftime("%H:%M") if t.hora_salida else "",
+            "horas_extras_diurnas": t.horas_extras_diurnas,
+            "horas_extras_nocturnas": t.horas_extras_nocturnas,
+            "horas_extras_festivas_diurnas": t.horas_extras_festivas_diurnas,
+            "horas_extras_festivas_nocturnas": t.horas_extras_festivas_nocturnas,
+            "recargo_nocturno": t.recargo_nocturno,
+            "recargo_nocturno_festivo": t.recargo_nocturno_festivo,
+            "supervisor": f"{a.supervisor_aprobo.emp_firstname} {a.supervisor_aprobo.emp_lastname}" if a.supervisor_aprobo else "",
+            "jefe": f"{a.jefe_aprobo.emp_firstname} {a.jefe_aprobo.emp_lastname}" if a.jefe_aprobo else "",
+            "bloqueado": 1 if a.bloqueado_para_pago else 0,
+            "id_turno": t.id,  # ✅ AGREGAR ESTA LÍNEA
+        })
+
+    return JsonResponse(datos, safe=False)
+
+
+@csrf_exempt
+def aprobar_horas_extra(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        turno_id = data.get("id")
+        field = data.get("field")
+        value = data.get("value")
+
+        try:
+            turno = EmpleadoTurno.objects.get(id=turno_id)
+            empleado_actual = request.user.hremployee
+            rol = empleado_actual.emp_role.nombre.lower()
+
+            #if field not in ["aprobado_supervisor", "aprobado_jefe_area"]:
+            if field not in ["aprobado_supervisor", "aprobado_jefe_area", "bloqueado_para_pago"]:
+                return JsonResponse({"success": False, "error": "Campo no válido"})
+
+
+            aprobacion, _ = AprobacionHorasExtras.objects.get_or_create(turno=turno)
+
+            # 🔒 Si ya fue aprobado por ambos y no es administrador, no permitir cambios
+            if (
+                aprobacion.aprobado_supervisor and
+                aprobacion.aprobado_jefe_area and
+                rol != "administrador"
+            ):
+                return JsonResponse({"success": False, "error": "❌ Ya fue aprobado por ambos. No se puede modificar."})
+
+            # 🔒 Supervisor no puede desmarcar si jefe ya aprobó
+            if rol == "supervisor" and field == "aprobado_supervisor" and not value and aprobacion.aprobado_jefe_area:
+                return JsonResponse({"success": False, "error": "❌ No puedes desmarcar. Ya fue aprobado por el jefe."})
+
+            # ✅ Si es ADMIN y desmarca, reinicia toda la aprobación
+            if rol == "administrador" and not value:
+                turno.aprobado_supervisor = False
+                turno.aprobado_jefe_area = False
+                turno.save()
+
+                aprobacion.aprobado_supervisor = False
+                aprobacion.aprobado_jefe_area = False
+                aprobacion.bloqueado_para_pago = False
+                aprobacion.save()
+
+                return JsonResponse({"success": True, "reiniciado": True})
+
+            # ✅ Guardar aprobación normal
+            setattr(turno, field, value)
+            turno.save()
+
+            if field == "aprobado_supervisor" and rol in ["supervisor", "jefe de área"]:
+                aprobacion.aprobado_supervisor = value
+                aprobacion.supervisor_aprobo = empleado_actual
+                aprobacion.fecha_aprobacion_supervisor = now()
+
+            elif field == "aprobado_jefe_area" and rol == "jefe de área":
+                aprobacion.aprobado_jefe_area = value
+                aprobacion.jefe_aprobo = empleado_actual
+                aprobacion.fecha_aprobacion_jefe = now()
+
+            if aprobacion.aprobado_supervisor and aprobacion.aprobado_jefe_area:
+                aprobacion.bloqueado_para_pago = True
+
+            aprobacion.save()
+            if field == "bloqueado_para_pago" and rol == "administrador":
+                aprobacion.bloqueado_para_pago = value
+                aprobacion.save()
+                return JsonResponse({"success": True})
+
+
+            return JsonResponse({"success": True})
+
+        except EmpleadoTurno.DoesNotExist:
+            return JsonResponse({"success": False, "error": "❌ Registro no encontrado"})
+
+    return JsonResponse({"success": False, "error": "❌ Método no permitido"}, status=405)
 
 
 

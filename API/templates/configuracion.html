@@ -11,8 +11,13 @@
 </head>
 <body>
 
-<header>
-    <img src="{% static 'img/logo.png' %}" alt="Logo" class="header-img">
+  <header>
+    <!-- Columna izquierda -->
+    <div class="header-left">
+        <img src="{% static 'img/logo.png' %}" alt="Logo" class="header-img">
+    </div>
+
+    <!-- Columna centro -->
     <div class="grid-container">
         <a href="{% url 'turnos' %}" class="box {% if request.path == '/turnos/' %}activo{% endif %}">Turnos</a>
         <a href="{% url 'empleados' %}" class="box {% if request.path == '/empleados/' %}activo{% endif %}">Empleados</a>
@@ -20,14 +25,23 @@
         <a href="{% url 'reportes_view' %}" class="box {% if request.path == '/reportes/' %}activo{% endif %}">Reportes</a>
         <a href="{% url 'configuracion' %}" class="box {% if request.path == '/configuracion/' %}activo{% endif %}">Configuraciones</a>
     </div>
-    <div>
-        <a href="{% url 'exportar_excel_general' %}?tabla=configuracion" class="btn btn-success">📥 Exportar Turnos</a>
+
+    <!-- Columna derecha -->
+    <div class="header-right">
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-cerrar-sesion">Cerrar sesión</button>
+        </form>
     </div>
 </header>
 
 
 
 <h1>Configuración</h1>
+
+<div>
+        <a href="{% url 'exportar_excel_general' %}?tabla=configuracion" class="btn btn-success">📥 Exportar Configuraciones</a>
+</div>
 
 <div class="contenedor-tabla">
 {% if request.user.hremployee.emp_role.nombre == "Administrador" %}
