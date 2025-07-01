@@ -6,6 +6,8 @@ from .views import (
     lista_empleados, crear_empleado,
     reportes_view, reporte_horas_extras,aprobar_horas_extra,
 )
+from .views import asignar_roles_grupo
+
 from API.views import ejecutar_procesamiento
 from API.views import historial_horas_extras_ajax
 
@@ -65,8 +67,14 @@ urlpatterns = [
     path("historial-horas-extras/ajax/", historial_horas_extras_ajax, name="historial_horas_extras_ajax"),
     
     
-
+    path('grupo/<int:id>/asignar_roles/', asignar_roles_grupo, name='asignar_roles_grupo'),
+    
 ]
+
+    
+    
+
+
 
 
     

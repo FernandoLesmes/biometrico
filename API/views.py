@@ -13,11 +13,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.timezone import make_aware
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+#from .views import asignar_roles_grupo
 
 from .forms import ShiftForm, HrGroupForm
 from .models import (
     HrGroup, HrEmployee, AttShift, EmpleadoTurno,
-    EmpJob, EmpRole, EmpCostCenter, AttPunch, GrupoSupervisor, PermisoRol
+    EmpJob, EmpRole, EmpCostCenter, AttPunch, GrupoSupervisor, PermisoRol, HrGroupJefe,
 )
 
 #from API.models import  HrEmployee, EmpRole, PermisoRol
@@ -30,6 +31,7 @@ from API.utils.permisos import tiene_permiso
 from django.utils.timezone import now
 
 from .models import AprobacionHorasExtras
+
 
 def parse_fecha(fecha_str):
     try:
@@ -316,48 +318,72 @@ def detalle_grupo(request, id):
         empleados = HrEmployee.objects.filter(emp_group=grupo)
         supervisores = GrupoSupervisor.objects.filter(grupo=grupo)
 
+        jefes = grupo.jefes_planta.all()
+        jefes_data = [
+            {"id": jefe.id, "nombre": f"{jefe.emp_firstname} {jefe.emp_lastname}"}
+            for jefe in jefes
+        ]
+
+        supervisores_data = [
+            {"id": sup.supervisor.id, "nombre": f"{sup.supervisor.emp_firstname} {sup.supervisor.emp_lastname}"}
+            for sup in supervisores
+        ]
+
+        empleados_data = [
+            f"{emp.emp_firstname} {emp.emp_lastname}"
+            for emp in empleados
+        ]
+
         data = {
             'grupo': grupo.nombre,
-            'jefe_planta': f"{grupo.jefe_planta.emp_firstname} {grupo.jefe_planta.emp_lastname}" if grupo.jefe_planta else "No asignado",
-            'supervisores': [f"{sup.supervisor.emp_firstname} {sup.supervisor.emp_lastname}" for sup in supervisores],
-            'empleados': [f"{emp.emp_firstname} {emp.emp_lastname}" for emp in empleados],
+            'jefes_planta': jefes_data,
+            'supervisores': supervisores_data,
+            'empleados': empleados_data,
         }
 
         return JsonResponse(data)
     except HrGroup.DoesNotExist:
-        return JsonResponse({'error': 'Grupo no encontrado'}, status=404)   
-    
-    
-    
+        return JsonResponse({'error': 'Grupo no encontrado'}, status=404)
+
+  
 @require_POST
 def asignar_roles_grupo(request, id):
     grupo = get_object_or_404(HrGroup, id=id)
 
-    jefe_id = request.POST.get('jefe_planta', None)
+    # ✅ Siempre borrar TODOS los jefes anteriores
+    HrGroupJefe.objects.filter(grupo=grupo).delete()
+    jefes_ids = request.POST.getlist('jefe_planta')
+
+    # ✅ Crear solo si se enviaron jefes válidos
+    if jefes_ids and any(jefe_id.strip() for jefe_id in jefes_ids):
+        for jefe_id in jefes_ids:
+            if jefe_id.strip():
+                jefe = get_object_or_404(HrEmployee, id=jefe_id)
+                if jefe.emp_role.nombre.lower() == "jefe de área":
+                    HrGroupJefe.objects.create(grupo=grupo, jefe=jefe)
+                else:
+                    return JsonResponse({
+                        'error': f"El empleado {jefe.emp_firstname} {jefe.emp_lastname} no es Jefe de Área"
+                    }, status=400)
+
+    # ✅ Siempre borrar TODOS los supervisores anteriores
+    GrupoSupervisor.objects.filter(grupo=grupo).delete()
     supervisores_ids = request.POST.getlist('supervisores')
 
-    # ✅ Verifica y asigna o elimina jefe de planta
-    if jefe_id != "":
-        if jefe_id:
-            jefe = HrEmployee.objects.get(id=jefe_id)
-            if jefe.emp_role.nombre.lower() == "jefe de área":
-                grupo.jefe_planta = jefe
-            else:
-                return JsonResponse({'error': 'El empleado seleccionado no tiene el rol de jefe de área'}, status=400)
-        else:
-            grupo.jefe_planta = None
-        grupo.save()
-
-    # ✅ Verifica si se envió el campo 'supervisores' en el formulario
-    if 'supervisores' in request.POST:
-        GrupoSupervisor.objects.filter(grupo=grupo).delete()
+    # ✅ Crear solo si se enviaron supervisores válidos
+    if supervisores_ids and any(sup_id.strip() for sup_id in supervisores_ids):
         for sup_id in supervisores_ids:
-            if sup_id.strip():  # evita errores por IDs vacíos
-                supervisor = HrEmployee.objects.get(id=sup_id)
+            if sup_id.strip():
+                supervisor = get_object_or_404(HrEmployee, id=sup_id)
                 if supervisor.emp_role.nombre.lower() == "supervisor":
                     GrupoSupervisor.objects.create(grupo=grupo, supervisor=supervisor)
 
     return JsonResponse({'success': True})
+    
+    
+    
+
+
 
 
 
@@ -571,12 +597,12 @@ def reportes_view(request):
         return redirect("home")
 
     tipo = request.GET.get("tipo", "basico")
-    buscar = request.GET.get("buscar", "").strip()  # nuevo campo combinado
+    buscar = request.GET.get("buscar", "").strip()
     grupo = request.GET.get("grupo")
     desde = request.GET.get("desde")
     hasta = request.GET.get("hasta")
 
-    # ✅ Si no hay fechas, se usan los últimos 3 días
+    # ✅ Fechas por defecto
     fecha_inicio = parse_fecha(desde) if desde else date.today() - timedelta(days=3)
     fecha_fin = parse_fecha(hasta) if hasta else date.today()
 
@@ -601,7 +627,8 @@ def reportes_view(request):
                 except ValueError:
                     return render(request, 'reportes.html', {'error': '❌ Grupo inválido.'})
         else:
-            grupos_jefe = HrGroup.objects.filter(jefe_planta=empleado)
+            # ✅ Aquí obtenemos todos sus grupos
+            grupos_jefe = HrGroup.objects.filter(jefes_planta=empleado)
             grupos_supervisor = HrGroup.objects.filter(gruposupervisor__supervisor=empleado)
             grupos_contexto = (grupos_jefe | grupos_supervisor).distinct()
 
@@ -614,16 +641,17 @@ def reportes_view(request):
                 except ValueError:
                     return render(request, 'reportes.html', {'error': '❌ Grupo inválido.'})
             elif grupos_contexto.exists():
-                filtros['grupo'] = grupos_contexto.first().id
+                # ✅ Pasar TODOS los IDs al filtro
+                filtros['grupo'] = list(grupos_contexto.values_list('id', flat=True))
             else:
                 return render(request, 'reportes.html', {'error': '❌ No tienes grupos asignados.'})
 
     print("🔍 Filtros usados:", filtros)
 
-    # ✅ Llama a la función correspondiente
+    # ✅ Llama a la función del reporte
     datos = generar_reporte_basico(filtros) if tipo == 'basico' else reporte_horas_extras(filtros)
 
-    # ✅ Aplica el filtro de búsqueda si hay datos y texto en buscar
+    # ✅ Filtro de búsqueda
     if buscar:
         datos = [r for r in datos if
                  buscar.lower() in str(r["cedula"]).lower() or

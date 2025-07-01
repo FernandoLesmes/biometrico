@@ -142,10 +142,9 @@ class EmpCostCenter(models.Model):
 class HrGroup(models.Model):
     id = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=255, unique=True)
-    jefe_planta = models.ForeignKey('HrEmployee', on_delete=models.SET_NULL, null=True, blank=True, related_name='grupos_como_jefe')
+    jefes_planta = models.ManyToManyField('HrEmployee',through='HrGroupJefe',related_name='grupos_como_jefe'
+    )
 
-    
-    
 
     class Meta:
         db_table = 'hr_group'  # 🔥 Asegura que se use la tabla correcta en la BD
@@ -293,3 +292,28 @@ class AprobacionHorasExtras(models.Model):
 
         def __str__(self):
             return f"{self.turno.empleado.emp_firstname} - {self.turno.fecha}"
+        
+        
+class HrGroupJefe(models.Model):
+    grupo = models.ForeignKey(
+        'HrGroup',
+        on_delete=models.CASCADE,
+        db_column='grupo_id',
+        verbose_name='Grupo'
+    )
+    jefe = models.ForeignKey(
+        'HrEmployee',
+        on_delete=models.CASCADE,
+        db_column='jefe_id',
+        verbose_name='Jefe de Área'
+    )
+
+    class Meta:
+        db_table = 'hrgroup_jefes_planta'
+        unique_together = ('grupo', 'jefe')
+        managed = False  # 👈 CLAVE: le dices a Django NO TOCARLA
+
+    def __str__(self):
+        return f"{self.grupo} ➜ {self.jefe}"
+
+        

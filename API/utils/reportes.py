@@ -34,7 +34,6 @@ def generar_reporte_basico(filtros):
     datos = []
     punches = AttPunch.objects.select_related('employee').order_by('punch_time')
 
-    
     if filtros.get("buscar"):
         q = filtros["buscar"]
         punches = punches.filter(
@@ -42,15 +41,12 @@ def generar_reporte_basico(filtros):
             Q(employee__emp_lastname__icontains=q)
         )
 
-    
-    #if filtros.get('cedula'):
-        #punches = punches.filter(employee__emp_pin__icontains=filtros['cedula'])
-
-    #if filtros.get("apellidos"):
-        #punches = punches.filter(employee__emp_lastname__icontains=filtros["apellidos"])
-
+    # ✅ Manejar uno o varios grupos
     if filtros.get("grupo"):
-        punches = punches.filter(employee__emp_group_id=filtros["grupo"])
+        if isinstance(filtros["grupo"], list):
+            punches = punches.filter(employee__emp_group_id__in=filtros["grupo"])
+        else:
+            punches = punches.filter(employee__emp_group_id=filtros["grupo"])
 
     punches = punches.filter(employee__emp_active=True)
 
@@ -98,21 +94,19 @@ def reporte_horas_extras(filtros):
     datos = []
     registros = EmpleadoTurno.objects.select_related('empleado', 'turno', 'empleado__emp_group')
 
-    #if filtros.get('cedula'):
-        #registros = registros.filter(empleado__emp_pin__icontains=filtros['cedula'])
-
-    #if filtros.get('apellidos'):
-        #registros = registros.filter(empleado__emp_lastname__icontains=filtros['apellidos'])
-        
     if filtros.get("buscar"):
         q = filtros["buscar"]
         registros = registros.filter(
             Q(empleado__emp_pin__icontains=q) |
             Q(empleado__emp_lastname__icontains=q)
-        )   
+        )
 
+    # ✅ Manejar uno o varios grupos
     if filtros.get('grupo'):
-        registros = registros.filter(empleado__emp_group_id=filtros['grupo'])
+        if isinstance(filtros["grupo"], list):
+            registros = registros.filter(empleado__emp_group_id__in=filtros['grupo'])
+        else:
+            registros = registros.filter(empleado__emp_group_id=filtros['grupo'])
 
     registros = registros.filter(empleado__emp_active=True)
 
@@ -124,7 +118,7 @@ def reporte_horas_extras(filtros):
 
     for r in registros:
         datos.append({
-            'id': r.id,  # ✅ AGREGADO
+            'id': r.id,
             'cedula': r.empleado.emp_pin,
             'nombre': r.empleado.emp_firstname,
             'apellidos': r.empleado.emp_lastname,
@@ -139,8 +133,8 @@ def reporte_horas_extras(filtros):
             'horas_extras_festivas_nocturnas': r.horas_extras_festivas_nocturnas,
             'recargo_nocturno': r.recargo_nocturno,
             'recargo_nocturno_festivo': r.recargo_nocturno_festivo,
-            'aprobado_supervisor': r.aprobado_supervisor,   # ⬅️ NECESARIO
-            'aprobado_jefe_area': r.aprobado_jefe_area, 
+            'aprobado_supervisor': r.aprobado_supervisor,
+            'aprobado_jefe_area': r.aprobado_jefe_area,
         })
 
     return datos

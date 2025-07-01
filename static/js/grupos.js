@@ -1,76 +1,170 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const filas = document.querySelectorAll("tr[data-id-grupo]");
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("✅ JS cargado correctamente");
 
-    filas.forEach(fila => {
-        fila.addEventListener("click", function () {
-            const grupoId = this.getAttribute("data-id-grupo");
+    /** ===========================================================
+     * 1. Cargar detalles de grupo al hacer clic en fila
+     * =========================================================== */
+    document.querySelectorAll("tr[data-id-grupo]").forEach(fila => {
+        fila.addEventListener("click", () => {
+            const grupoId = fila.getAttribute("data-id-grupo");
 
             fetch(`/grupo/${grupoId}/detalle/`)
-                .then(response => response.json())
+                .then(res => res.json())
                 .then(data => {
-                    // Rellenar información del grupo
+                    // Mostrar datos del grupo
                     document.getElementById("grupoIdSeleccionado").value = grupoId;
                     document.getElementById("grupoNombre").textContent = data.grupo;
-                    document.getElementById("jefePlanta").textContent = data.jefe_planta;
-                    document.getElementById("supervisores").innerHTML = data.supervisores.map(s => `<li>${s}</li>`).join('');
-                    document.getElementById("empleados").innerHTML = data.empleados.map(e => `<li>${e}</li>`).join('');
 
-                    // Resetear el select de jefe
+                    // Mostrar jefes de planta
+                    document.getElementById("jefePlanta").innerHTML = data.jefes_planta
+                        .map(j => `<li>${j.nombre}</li>`)
+                        .join('') || "<li>-- Ninguno --</li>";
+
+                    // Mostrar supervisores
+                    document.getElementById("supervisores").innerHTML = data.supervisores
+                        .map(s => `<li>${s.nombre}</li>`)
+                        .join('') || "<li>-- Ninguno --</li>";
+
+                    // Mostrar empleados
+                    document.getElementById("empleados").innerHTML = data.empleados
+                        .map(e => `<li>${e}</li>`)
+                        .join('') || "<li>-- Ninguno --</li>";
+
+                    // ================================
+                    // SELECCIONAR EN LOS SELECTS
+                    // ================================
                     const selectJefe = document.getElementById("selectJefe");
-                    if (selectJefe) selectJefe.selectedIndex = 0;
+                    if (selectJefe) {
+                        // Solo uno permitido
+                        if (data.jefes_planta.length > 0) {
+                            selectJefe.value = data.jefes_planta[0].id;
+                        } else {
+                            selectJefe.value = "";
+                        }
+                    }
 
-                    // Resetear los seleccionados del select múltiple de supervisores
                     const selectSupervisores = document.getElementById("selectSupervisores");
                     if (selectSupervisores) {
-                        [...selectSupervisores.options].forEach(option => {
-                            option.selected = false;
+                        // Desmarcar todo
+                        Array.from(selectSupervisores.options).forEach(opt => opt.selected = false);
+
+                        // Marcar supervisores existentes
+                        data.supervisores.forEach(s => {
+                            const match = Array.from(selectSupervisores.options).find(opt => opt.value == s.id);
+                            if (match) match.selected = true;
                         });
                     }
 
-                    // Mostrar el modal
+                    // Abrir el modal
                     document.getElementById("modalDetalleGrupo").style.display = "block";
                 })
                 .catch(error => {
-                    console.error("❌ Error al cargar detalles del grupo:", error);
-                    alert("Error al cargar los datos del grupo.");
+                    console.error("❌ Error al cargar detalles:", error);
+                    alert("❌ Error al cargar los datos del grupo.");
                 });
         });
     });
 
-    // Cerrar modal de detalle
+    /** ===========================================================
+     * 2. Cerrar modal de detalle
+     * =========================================================== */
     const btnCerrar = document.querySelector(".close-detalle");
     if (btnCerrar) {
         btnCerrar.addEventListener("click", () => {
             document.getElementById("modalDetalleGrupo").style.display = "none";
         });
     }
-});
 
-document.addEventListener("DOMContentLoaded", function () {
-    const form = document.getElementById("formAsignarRoles");
+    /** ===========================================================
+     * 3. Enviar formulario de ASIGNAR ROLES (jefe y supervisores)
+     * =========================================================== */
+    const formAsignar = document.getElementById("formAsignarRoles");
+    if (formAsignar) {
+        formAsignar.addEventListener("submit", e => {
+            e.preventDefault();
 
-    if (form) {
-        form.addEventListener("submit", function (e) {
-            const jefeSelect = document.getElementById("selectJefe");
+            const grupoId = document.getElementById("grupoIdSeleccionado").value;
+            if (!grupoId) {
+                alert("❌ No se ha seleccionado ningún grupo.");
+                return;
+            }
+
+            // ✅ Prepara datos
+            const formData = new FormData();
+
+            const jefeId = document.getElementById("selectJefe").value;
+            if (jefeId) {
+                formData.append("jefe_planta", jefeId);
+            }
+
             const supervisoresSelect = document.getElementById("selectSupervisores");
+            Array.from(supervisoresSelect.selectedOptions).forEach(opt => {
+                formData.append("supervisores", opt.value);
+            });
 
-            // ✅ Forzar jefe vacío si no hay valor seleccionado
-            if (!jefeSelect.value) {
-                const inputJefe = document.createElement("input");
-                inputJefe.type = "hidden";
-                inputJefe.name = "jefe_planta";
-                inputJefe.value = "";
-                form.appendChild(inputJefe);
-            }
+            // ✅ CSRF token
+            const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+            formData.append("csrfmiddlewaretoken", csrfToken);
 
-            // ✅ Forzar supervisores vacío si ninguno está seleccionado
-            if (supervisoresSelect.selectedOptions.length === 0) {
-                const inputSupervisores = document.createElement("input");
-                inputSupervisores.type = "hidden";
-                inputSupervisores.name = "supervisores";
-                inputSupervisores.value = "";
-                form.appendChild(inputSupervisores);
-            }
+            // ✅ Enviar
+            fetch(`/grupo/${grupoId}/asignar_roles/`, {
+                method: "POST",
+                body: formData
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("✅ Roles asignados correctamente");
+                        document.getElementById("modalDetalleGrupo").style.display = "none";
+                        location.reload();  // Opcional si quieres recargar la tabla
+                    } else {
+                        alert("❌ Error: " + (data.error || "No se pudo guardar."));
+                    }
+                })
+                .catch(() => {
+                    alert("❌ Error en la solicitud. Verifica tu conexión o el servidor.");
+                });
+        });
+    }
+
+    /** ===========================================================
+     * 4. Crear grupo nuevo (modal de crear)
+     * =========================================================== */
+    const btnAbrir = document.getElementById("crearGrupoBtn");
+    const modalCrear = document.getElementById("modalGrupo");
+    const btnCerrarCrear = document.querySelector(".close");
+
+    if (btnAbrir && modalCrear && btnCerrarCrear) {
+        btnAbrir.onclick = () => modalCrear.style.display = "block";
+        btnCerrarCrear.onclick = () => modalCrear.style.display = "none";
+        window.onclick = e => {
+            if (e.target == modalCrear) modalCrear.style.display = "none";
+        };
+    }
+
+    const formCrear = document.getElementById("formCrearGrupo");
+    if (formCrear) {
+        formCrear.addEventListener("submit", e => {
+            e.preventDefault();
+
+            const formData = new FormData(formCrear);
+            fetch("/grupos/crear/", {
+                method: "POST",
+                body: formData
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("✅ Grupo creado con éxito");
+                        modalCrear.style.display = "none";
+                        location.reload();
+                    } else {
+                        alert("❌ Error: " + (data.error || "No se pudo crear."));
+                    }
+                })
+                .catch(() => {
+                    alert("❌ Error al crear el grupo.");
+                });
         });
     }
 });
