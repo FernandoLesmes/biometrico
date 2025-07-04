@@ -11,6 +11,8 @@ FESTIVOS_FIJOS = [
     date(2025, 5, 26),  # Ascensión (trasladado)
     date(2025, 6, 16),  # Corpus Christi (trasladado)
     date(2025, 6, 23),  # Sagrado Corazón (trasladado)
+    date(2025, 6, 30),   # Independencia
+    date(2025, 7, 2), # Navidad
     date(2025, 7, 20),  # Independencia
     date(2025, 8, 7),   # Batalla de Boyacá
     date(2025, 8, 18),  # La Asunción (trasladado)
@@ -19,10 +21,16 @@ FESTIVOS_FIJOS = [
     date(2025, 11, 17), # Independencia de Cartagena (trasladado)
     date(2025, 12, 8),  # Inmaculada Concepción
     date(2025, 12, 25), # Navidad
+    
 ]
 
 def es_festivo(fecha):
     """
     Retorna True si la fecha es un festivo o domingo.
+    Soporta datetime o date.
     """
-    return fecha in FESTIVOS_FIJOS or fecha.weekday() == 6  # domingo = 6
+    # Forzar conversion si viene como datetime
+    if hasattr(fecha, "date"):
+        fecha = fecha.date()
+    return fecha in FESTIVOS_FIJOS or fecha.weekday() == 6
+

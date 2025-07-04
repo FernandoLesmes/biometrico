@@ -8,7 +8,10 @@ TURNOS = {
         "hora_entrada_min": time(5, 0),
         "hora_entrada_max": time(6, 10),
         "hora_salida": time(14, 0),
+        "acepta_salida_anticipada": True,  # Puede salir antes de las 2 pero sigue siendo Turno 1
         "horas_turno": 8,
+        "horas_semana": 46,                 # Total esperado semanal
+        "horas_sabado": 6,                  # Jornada reducida sábado
         "autoriza_extra": True,
         "descuento_almuerzo_si_hay_extra": True,
         "extras_posibles": {
@@ -22,12 +25,12 @@ TURNOS = {
         "rango_horas_extra_diurnas": {
             "inicio": time(14, 0),
             "fin": time(18, 0),
-            "tasa": 1.25
+            #"tasa": 1.25
         }
     },
     2: {
         "nombre": "Turno 2",
-        "hora_entrada_min": time(14, 0),
+        "hora_entrada_min": time(13, 0),
         "hora_entrada_max": time(14, 10),
         "hora_salida": time(22, 0),
         "horas_turno": 8,
@@ -45,29 +48,29 @@ TURNOS = {
         "permite_horas_extra": True,
         "hora_extra_inicio": time(10, 0),
         "hora_extra_fin": time(13, 59),
-        "tarifa_extra_diurna": 1.25,
+        #"tarifa_extra_diurna": 1.25,
         "rangos_horas_extra_diurna": [3.5, 3, 2.5, 2, 1.5, 1],
         "descontar_almuerzo_extra": True,
         "minutos_descuento_almuerzo": 30,
         "permite_extra_despues_turno": False,
-        "tarifa_extra_nocturna": 1.75,
+        #"tarifa_extra_nocturna": 1.75,
         "extra_festiva_diurna": {
-            "tarifa": 2.0,
+            #"tarifa": 2.0,
             "max_horas": 8
         },
         "extra_festiva_nocturna": {
-            "tarifa": 2.5,
+            #"tarifa": 2.5,
             "max_horas": 1
         },
         "recargo_nocturno": {
             "activo": True,
-            "desde": time(21, 0),
+            "desde": time(19, 0),
             "hasta": time(22, 0),
-            "tarifa": 0.35
+            #"tarifa": 0.35
         },
         "recargo_nocturno_festivo": {
             "activo": False,
-            "tarifa": 2.1
+            #"tarifa": 2.1
         }
     },
     3: {
@@ -90,22 +93,22 @@ TURNOS = {
             "inicio": time(18, 0),
             "fin": time(21, 0),
             "maximo_horas": 3,
-            "tasa": 1.25
+            #"tasa": 1.25
         },
         "rango_extras_nocturnas": {
             "inicio": time(21, 0),
             "fin": time(22, 0),
-            "tasa": 1.75
+            #"tasa": 1.75
         },
         "rango_recargo_nocturno": {
             "inicio": time(22, 0),
             "fin": time(6, 0),
-            "tasa": 0.35
+            #"tasa": 0.35
         },
         "rango_recargo_nocturno_festivo": {
             "inicio": time(22, 0),
             "fin": time(6, 0),
-            "tasa": 2.1
+            #"tasa": 2.1
         },
         "logica_turno": {
             "entrada_dia_siguiente": True,
