@@ -762,17 +762,28 @@ def exportar_excel_general(request):
     # 🟡 Caso especial: Reportes (básico y horas extras)
     if tabla == "reportes":
         tipo = request.GET.get("tipo", "basico")
-        #cedula = request.GET.get("cedula", "")
-        #apellidos = request.GET.get("apellidos", "")
         buscar = request.GET.get("buscar", "").strip()
         grupos = request.GET.get("grupos", "")
         desde = parse_fecha(request.GET.get("desde"))
         hasta = parse_fecha(request.GET.get("hasta"))
 
+        # ✅ Ajuste de grupos para roles Jefe de Área y Supervisor
+        if hasattr(request.user, 'hremployee'):
+            empleado = request.user.hremployee
+            rol = empleado.emp_role.nombre.lower()
+
+            if rol in ["jefe de área", "supervisor"]:
+                grupos_jefe = HrGroup.objects.filter(jefes_planta=empleado)
+                grupos_supervisor = HrGroup.objects.filter(gruposupervisor__supervisor=empleado)
+                grupos_usuario = (grupos_jefe | grupos_supervisor).distinct()
+
+                if grupos_usuario.exists():
+                    grupos = list(grupos_usuario.values_list('id', flat=True))
+                else:
+                    grupos = None
+
         filtros = {
             "buscar": buscar,
-            #"cedula": cedula,
-            #"apellidos": apellidos,
             "grupo": grupos,
             "desde": desde,
             "hasta": hasta,
@@ -902,6 +913,7 @@ def exportar_excel_general(request):
     response['Content-Disposition'] = f'attachment; filename={tabla}.xlsx'
     wb.save(response)
     return response
+
 
 
 

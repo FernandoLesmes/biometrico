@@ -78,6 +78,9 @@ def agrupar_marcaciones_3(marcaciones):
         else:
             i += 1
     return bloques
+
+
+
 # ========================
 # ✅ Reporte de asistencia básica
 # ========================
@@ -136,9 +139,11 @@ def generar_reporte_basico(filtros):
 
             for entrada, salida in bloques_turno_3:
                 if salida.date() == fecha:
-                    turno_nombre = "Turno 3"
-                    entradas_salidas = [entrada, salida]
-                    fechas_usadas_como_entrada_de_turno3.add(entrada.date())
+                    # ✅ Validar si el grupo permite turno 3
+                    if grupo in GRUPOS_ROTATIVOS:
+                        turno_nombre = "Turno 3"
+                        entradas_salidas = [entrada, salida]
+                        fechas_usadas_como_entrada_de_turno3.add(entrada.date())
                     break
 
             resultados_temporales.append({
@@ -173,6 +178,10 @@ def generar_reporte_basico(filtros):
                     salida = marcas_actual[-1].time()
                     turno = detectar_turno(entrada, salida, grupo)
                     turno_nombre = turno["nombre"] if turno else ''
+
+                    # ✅ Validar si asignó Turno 3 y el grupo no es rotativo
+                    if turno_nombre == "Turno 3" and grupo not in GRUPOS_ROTATIVOS:
+                        turno_nombre = ''
                 else:
                     turno_nombre = ''
 
@@ -188,8 +197,6 @@ def generar_reporte_basico(filtros):
 
     return datos
 
-
-# ========================
 # ✅ Reporte de horas extras
 # ========================
 def reporte_horas_extras(filtros):
@@ -203,6 +210,7 @@ def reporte_horas_extras(filtros):
             Q(empleado__emp_lastname__icontains=q)
         )
 
+    # ✅ Manejar uno o varios grupos
     if filtros.get('grupo'):
         if isinstance(filtros["grupo"], list):
             registros = registros.filter(empleado__emp_group_id__in=filtros['grupo'])
@@ -239,6 +247,7 @@ def reporte_horas_extras(filtros):
         })
 
     return datos
+
 # ========================
 # ✅ Procesamiento general de marcaciones
 # ========================
